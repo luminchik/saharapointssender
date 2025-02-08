@@ -11,7 +11,10 @@ const client = new Client({
 });
 
 const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID;
-console.log('Logger initialized with channel ID:', LOG_CHANNEL_ID);
+console.log('Logger initialization started...');
+console.log('Environment check:');
+console.log('- DISCORD_TOKEN:', process.env.DISCORD_TOKEN ? 'Set' : 'Not set');
+console.log('- LOG_CHANNEL_ID:', process.env.LOG_CHANNEL_ID ? 'Set' : 'Not set');
 
 // Очередь логов
 let logQueue = [];
@@ -20,42 +23,66 @@ let initializationPromise = null;
 let initializationAttempts = 0;
 const MAX_RETRY_ATTEMPTS = 3;
 
+// Обработка ошибок клиента
+client.on('error', error => {
+    console.error('Discord client error:', error);
+    clientReady = false;
+});
+
+client.on('disconnect', () => {
+    console.log('Discord client disconnected');
+    clientReady = false;
+});
+
+client.on('reconnecting', () => {
+    console.log('Discord client reconnecting...');
+});
+
 // Функция инициализации клиента
 async function initializeClient() {
     if (initializationPromise) {
+        console.log('Using existing initialization promise');
         return initializationPromise;
     }
 
     if (initializationAttempts >= MAX_RETRY_ATTEMPTS) {
-        console.warn('Max retry attempts reached for Discord client initialization');
-        return Promise.resolve(); // Allow the application to continue without Discord logging
+        console.warn(`Max retry attempts (${MAX_RETRY_ATTEMPTS}) reached for Discord client initialization`);
+        return Promise.resolve();
     }
 
-    console.log('Initializing Discord client for logging...');
+    console.log(`Initializing Discord client (attempt ${initializationAttempts + 1}/${MAX_RETRY_ATTEMPTS})...`);
     initializationAttempts++;
     
     initializationPromise = new Promise((resolve, reject) => {
         const token = process.env.DISCORD_TOKEN;
         
-        // Validate token
         if (!token) {
             console.warn('DISCORD_TOKEN is not set in environment variables. Discord logging will be disabled.');
-            resolve(); // Allow the application to continue without Discord logging
+            resolve();
             return;
         }
 
-        // Set up event handlers before login
-        client.once('ready', () => {
-            console.log('Bot is ready for logging. Bot username:', client.user.tag);
-            clientReady = true;
-            processLogQueue();
+        if (!LOG_CHANNEL_ID) {
+            console.warn('LOG_CHANNEL_ID is not set in environment variables. Discord logging will be disabled.');
             resolve();
-        });
+            return;
+        }
 
-        client.on('error', (error) => {
-            console.error('Discord client error:', error);
-            clientReady = false;
-            // Don't reject here, just log the error
+        client.once('ready', async () => {
+            console.log('Discord client ready. Bot username:', client.user.tag);
+            try {
+                const channel = await client.channels.fetch(LOG_CHANNEL_ID);
+                if (channel) {
+                    console.log('Successfully connected to log channel:', channel.name);
+                    clientReady = true;
+                    processLogQueue();
+                } else {
+                    console.error('Could not find log channel with ID:', LOG_CHANNEL_ID);
+                }
+            } catch (error) {
+                console.error('Error fetching log channel:', error);
+            }
+            resolve();
         });
 
         console.log('Attempting to login with token:', token.substring(0, 10) + '...');
@@ -63,8 +90,8 @@ async function initializeClient() {
         client.login(token).catch(error => {
             console.error('Failed to login to Discord:', error);
             clientReady = false;
-            initializationPromise = null; // Allow retry on next attempt
-            resolve(); // Allow the application to continue without Discord logging
+            initializationPromise = null;
+            resolve();
         });
     });
 
@@ -157,12 +184,6 @@ async function sendLogToDiscord(data) {
         throw error;
     }
 }
-
-// Обработка ошибок клиента
-client.on('error', error => {
-    console.error('Discord client error:', error);
-    clientReady = false;
-});
 
 const Logger = {
     // Отправка лога в Discord
