@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
             serverSide: false,
             processing: true,
             order: [[0, 'desc']], // Сортировка по ID по убыванию
+            ordering: false, // Отключаем возможность сортировки по столбцам
             ajax: {
                 url: '/api/events',
                 type: 'GET',
