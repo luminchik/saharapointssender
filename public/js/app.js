@@ -152,6 +152,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>`
                         );
                         header.html(button).append(popup);
+
+                        // Добавляем обработчик клика для кнопки фильтра
+                        button.on('click', function(e) {
+                            e.stopPropagation();
+                            $('.column-filter-popup').not(popup).removeClass('active');
+                            popup.toggleClass('active');
+                            $('.column-filter-button').not(button).removeClass('active');
+                            button.toggleClass('active');
+                        });
                         
                         // Обработчик фильтра даты
                         popup.find('.apply-filter').on('click', function() {
@@ -211,11 +220,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>`
                         );
                         header.html(button).append(popup);
-                        
-                        // Обработчик кнопок статуса
-                        popup.find('.status-btn').on('click', function() {
-                            popup.find('.status-btn').removeClass('active');
-                            $(this).addClass('active');
+
+                        // Добавляем обработчик клика для кнопки фильтра
+                        button.on('click', function(e) {
+                            e.stopPropagation();
+                            $('.column-filter-popup').not(popup).removeClass('active');
+                            popup.toggleClass('active');
+                            $('.column-filter-button').not(button).removeClass('active');
+                            button.toggleClass('active');
                         });
                         
                         // Обработчик фильтра статуса
