@@ -243,17 +243,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         popup.find('.apply-filter').on('click', function() {
                             const selectedStatus = popup.find('.status-btn.active').data('value');
                             
-                            // Очищаем предыдущие фильтры поиска
-                            $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(fn => 
-                                fn.toString().indexOf('status filter') === -1
-                            );
-
+                            // Очищаем все фильтры поиска
+                            $.fn.dataTable.ext.search = [];
+                            
                             if (selectedStatus) {
                                 // Добавляем новый фильтр для статуса
                                 $.fn.dataTable.ext.search.push(
                                     function statusFilter(settings, data, dataIndex) {
-                                        const status = data[5]; // Индекс колонки статуса
-                                        return status.includes(selectedStatus);
+                                        const status = $(data[5]).text(); // Получаем текст из HTML статуса
+                                        return selectedStatus === '' || status === selectedStatus;
                                     }
                                 );
                             }
@@ -263,14 +261,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             button.toggleClass('active', !!selectedStatus);
                         });
                         
+                        // Обработчик очистки фильтра
                         popup.find('.clear-filter').on('click', function() {
+                            // Очищаем все фильтры поиска
+                            $.fn.dataTable.ext.search = [];
+                            
+                            // Сбрасываем активную кнопку на "All"
                             popup.find('.status-btn').removeClass('active');
                             popup.find('.status-btn[data-value=""]').addClass('active');
-                            
-                            // Очищаем фильтры поиска для статуса
-                            $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(fn => 
-                                fn.toString().indexOf('status filter') === -1
-                            );
                             
                             table.draw();
                             popup.removeClass('active');
