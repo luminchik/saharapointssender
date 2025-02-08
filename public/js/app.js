@@ -35,8 +35,11 @@ document.addEventListener('DOMContentLoaded', function() {
         table = $('#eventsTable').DataTable({
             serverSide: false,
             processing: true,
+            ordering: true, // Включаем сортировку
             order: [[0, 'desc']], // Сортировка по ID по убыванию
-            ordering: false, // Отключаем возможность сортировки по столбцам
+            columnDefs: [
+                { orderable: false, targets: [1,2,3,4,5,6] } // Отключаем сортировку для всех столбцов кроме ID
+            ],
             ajax: {
                 url: '/api/events',
                 type: 'GET',
@@ -229,15 +232,33 @@ document.addEventListener('DOMContentLoaded', function() {
                             $('.column-filter-button').not(button).removeClass('active');
                             button.toggleClass('active');
                         });
+
+                        // Обработчик кнопок статуса
+                        popup.find('.status-btn').on('click', function() {
+                            popup.find('.status-btn').removeClass('active');
+                            $(this).addClass('active');
+                        });
                         
                         // Обработчик фильтра статуса
                         popup.find('.apply-filter').on('click', function() {
                             const selectedStatus = popup.find('.status-btn.active').data('value');
+                            
+                            // Очищаем предыдущие фильтры поиска
+                            $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(fn => 
+                                fn.toString().indexOf('status filter') === -1
+                            );
+
                             if (selectedStatus) {
-                                column.search(selectedStatus).draw();
-                            } else {
-                                column.search('').draw();
+                                // Добавляем новый фильтр для статуса
+                                $.fn.dataTable.ext.search.push(
+                                    function statusFilter(settings, data, dataIndex) {
+                                        const status = data[5]; // Индекс колонки статуса
+                                        return status.includes(selectedStatus);
+                                    }
+                                );
                             }
+                            
+                            table.draw();
                             popup.removeClass('active');
                             button.toggleClass('active', !!selectedStatus);
                         });
@@ -245,7 +266,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         popup.find('.clear-filter').on('click', function() {
                             popup.find('.status-btn').removeClass('active');
                             popup.find('.status-btn[data-value=""]').addClass('active');
-                            column.search('').draw();
+                            
+                            // Очищаем фильтры поиска для статуса
+                            $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(fn => 
+                                fn.toString().indexOf('status filter') === -1
+                            );
+                            
+                            table.draw();
                             popup.removeClass('active');
                             button.removeClass('active');
                         });
