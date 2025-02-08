@@ -1,0 +1,39 @@
+{
+  "name": "sahara-ai",
+  "version": "1.0.0",
+  "description": "Sahara AI - OP Distribution System",
+  "main": "app.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=16.0.0 <24.0.0"
+  },
+  "scripts": {
+    "migrate": "sequelize db:migrate",
+    "migrate:undo": "sequelize db:migrate:undo",
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "build": "npm install",
+    "init-db": "node scripts/init-db.js",
+    "bot": "python3 pointssender.py",
+    "backup": "node scripts/backup.js",
+    "backup:daily": "0 0 * * * node scripts/backup.js"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "sequelize-cli": "^6.6.2"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.7.2",
+    "axios": "^1.7.9",
+    "connect-session-sequelize": "^7.1.7",
+    "discord.js": "^14.17.3",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "passport": "^0.6.0",
+    "passport-discord": "^0.1.4",
+    "pg": "^8.11.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.35.2"
+  }
+}

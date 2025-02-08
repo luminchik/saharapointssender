@@ -1,0 +1,1338 @@
+:root {
+    --sahara-sand: #F7FF98;
+    --sahara-black: #000000;
+    --sahara-blue: #263238;  /* Тёмный фон */
+    --status-pending: #FFB800;
+    --status-completed: #00FF85;
+    --status-rejected: #FF4444;
+    --text-light: #FFFFFF;
+    --nav-bg: rgba(38, 50, 56, 0.9);  /* Тёмный фон навбара */
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Manrope', sans-serif;
+    background: url('/images/bg.png') no-repeat center center fixed;
+    background-size: cover;
+    color: var(--text-light);
+}
+
+/* Стили для страницы входа */
+.login-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: url('/images/bg.png') no-repeat center center fixed;
+    background-size: cover;
+}
+
+.login-container {
+    background: var(--nav-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    min-width: 320px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.login-header {
+    margin-bottom: 2rem;
+}
+
+.login-header h1 {
+    font-family: 'Poly Sans Neutral Wide', sans-serif;
+    color: var(--sahara-black);
+    margin: 0;
+    font-size: 2rem;
+}
+
+.login-header h2 {
+    font-family: 'Manrope', sans-serif;
+    color: var(--sahara-black);
+    margin: 0.5rem 0 1.5rem;
+    font-size: 1.5rem;
+}
+
+.login-content p {
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    font-size: 1rem;
+}
+
+.whitelist-note {
+    color: var(--sahara-sand) !important;
+    font-size: 0.9rem !important;
+    margin-top: -1rem !important;
+}
+
+.discord-login-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #5865F2;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    gap: 10px;
+    transition: background-color 0.2s ease;
+    width: 100%;
+    max-width: 250px;
+    margin: 0 auto;
+}
+
+.discord-login-btn:hover {
+    background: #4752C4;
+}
+
+/* Стили навбара */
+.navbar {
+    background: var(--nav-bg);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.home-link {
+    background: var(--sahara-sand);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--sahara-black);
+    display: inline-flex;
+    align-items: center;
+}
+
+.home-link:hover {
+    background: #e9f589;
+}
+
+.nav-items {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.create-event-btn {
+    background: var(--sahara-sand);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--sahara-black);
+    display: inline-flex;
+    align-items: center;
+}
+
+.create-event-btn:hover {
+    background: #e9f589;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    cursor: pointer;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: opacity 0.2s ease;
+    background: rgba(255, 255, 255, 0.1) url('https://cdn.discordapp.com/embed/avatars/0.png') center/cover no-repeat;
+    min-width: 32px;
+    min-height: 32px;
+    display: block;
+    object-fit: cover;
+    opacity: 0;
+}
+
+.user-avatar.loaded {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.user-profile.active .logout-dropdown {
+    display: flex;
+}
+
+.user-profile.active .user-avatar {
+    opacity: 0.8;
+}
+
+.logout-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--nav-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-light);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.logout-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+/* Стили для заголовка страницы */
+.page-title {
+    font-family: 'Poly Sans Neutral Wide', sans-serif;
+    font-size: 2em;
+    text-align: center;
+    margin: 1em 0;
+    padding: 0.5em;
+    background-color: #3b5252;
+    color: white;
+    border-radius: 8px;
+}
+
+/* Стили таблицы */
+.main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    margin-top: 2rem;
+    background: var(--nav-bg);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+}
+
+h1 {
+    font-family: 'Poly Sans Neutral Wide', sans-serif;
+    color: var(--text-light);
+    margin: 0;
+    margin-top: 1rem;
+}
+
+table.dataTable {
+    background: rgba(38, 50, 56, 0.8);
+    border-radius: 8px;
+    border: none !important;
+    width: 100% !important;
+    margin: 1rem 0 !important;
+}
+
+table.dataTable thead th,
+table.dataTable tbody td {
+    color: var(--text-light);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_processing,
+.dataTables_wrapper .dataTables_paginate {
+    color: var(--text-light) !important;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-light);
+}
+
+.status-pending {
+    color: var(--status-pending);
+}
+
+.status-completed {
+    color: var(--status-completed);
+}
+
+.status-rejected {
+    color: var(--status-rejected);
+}
+
+.sahara-sand-text {
+  color: #F7FF98;
+  font-family: 'Poly Sans Neutral Wide', sans-serif;
+}
+
+.sahara-blue-bg {
+  background-color: #E4EAEC;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+  border: 1px solid #000000 !important;
+}
+
+/* Стили для формы создания события */
+.create-event-form {
+    max-width: 1000px;
+    margin: 0 auto;
+    margin-top: 2rem;
+    display: grid;
+    gap: 1.5rem;
+    background: var(--nav-bg);
+    padding: 2rem;
+    border-radius: 12px;
+}
+
+.form-group {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.required {
+    color: #FF4444;
+    margin-right: 4px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    font-family: 'Manrope', sans-serif;
+}
+
+.form-group input[readonly] {
+    background-color: rgba(255, 255, 255, 0.05);
+    cursor: not-allowed;
+}
+
+.distribution-section {
+    max-width: 1000px;
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.distribution-header {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 2rem;
+    color: var(--sahara-sand);
+    margin-bottom: 0.5rem;
+    padding: 0 1rem;
+}
+
+.distribution-entry {
+    display: grid;
+    grid-template-columns: 200px 1fr auto;
+    gap: 2rem;
+    align-items: start;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+}
+
+.distribution-entry input[type="number"] {
+    width: 100%;
+    min-width: 180px;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-light);
+    height: 38px;
+}
+
+.distribution-entry textarea {
+    min-height: 100px;
+    max-height: 300px;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-light);
+    resize: vertical;
+}
+
+.add-new-btn {
+    background: var(--sahara-sand);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.form-actions {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.continue-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.submit-btn {
+    background: var(--sahara-sand);
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.submit-btn:hover {
+    background: #e9f589;
+}
+
+.remove-distribution {
+    background: rgba(244, 67, 54, 0.1);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-start;
+}
+
+.remove-distribution:hover {
+    background: rgba(244, 67, 54, 0.2);
+}
+
+.remove-distribution svg {
+    width: 24px;
+    height: 24px;
+    fill: #F44336;
+}
+
+/* Стили для статусов в таблице */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.status-badge.pending {
+    background: var(--status-pending);
+    color: #000;
+}
+
+.status-badge.completed {
+    background: var(--status-completed);
+    color: #000;
+}
+
+.status-badge.rejected {
+    background: var(--status-rejected);
+    color: #000;
+}
+
+/* Стили для DataTables */
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 1.5rem;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    color: var(--text-light) !important;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 4px;
+}
+
+.dataTables_wrapper .dataTables_length select option {
+    background: var(--nav-bg);
+    color: var(--text-light);
+}
+
+/* Стили для таблицы */
+table.dataTable thead th {
+    background-color: #3b5252;
+    color: white;
+    font-weight: 600;
+    padding: 12px 8px;
+    border: none;
+    cursor: default !important;
+}
+
+/* Отключаем стили сортировки */
+table.dataTable thead th.sorting,
+table.dataTable thead th.sorting_asc,
+table.dataTable thead th.sorting_desc {
+    background-image: none !important;
+    cursor: default !important;
+}
+
+/* Убираем hover-эффект с заголовков */
+table.dataTable thead th:hover {
+    background-color: #3b5252 !important;
+}
+
+/* Стили для поиска */
+.dataTables_wrapper .dataTables_filter input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-light);
+    border-radius: 4px;
+    padding: 6px 10px;
+}
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_processing,
+.dataTables_wrapper .dataTables_paginate {
+    color: var(--text-light) !important;
+}
+
+/* Стили для пагинации */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: var(--text-light) !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: rgba(247, 255, 152, 0.2) !important;
+    border: none !important;
+    color: var(--sahara-sand) !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: none !important;
+}
+
+/* Стили для фильтра requestor */
+.requestor-name {
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.requestor-name:hover {
+    color: var(--sahara-sand);
+}
+
+.filter-indicator {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(247, 255, 152, 0.1);
+    border-radius: 4px;
+    margin-left: 1rem;
+}
+
+.filter-indicator.active {
+    display: inline-flex;
+}
+
+.clear-filter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--sahara-sand);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+}
+
+.clear-filter:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.clear-filter svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+/* Стили для кнопок действий */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.action-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.view-btn {
+    color: var(--sahara-sand);
+}
+
+.edit-btn {
+    color: #64B5F6;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Стили для модального окна */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+}
+
+.modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--nav-bg);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.modal-close svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+.event-details {
+    display: grid;
+    gap: 1rem;
+}
+
+.detail-group {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--sahara-sand);
+}
+
+.distributions-list {
+    display: grid;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.distribution-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.distribution-item strong {
+    color: var(--sahara-sand);
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.distribution-item pre {
+    margin: 0;
+    white-space: pre-wrap;
+    color: var(--text-light);
+    font-family: 'Manrope', sans-serif;
+}
+
+/* Стили для заголовков распределения */
+.distribution-section h3 {
+    color: var(--sahara-sand);
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+}
+
+/* Стили для меток Amount of XP и Name List */
+.distribution-header span {
+    font-weight: 600;
+    padding: 0.5rem 0;
+}
+
+/* Стили для flatpickr */
+.flatpickr-input {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-light) !important;
+    padding: 0.75rem !important;
+    border-radius: 6px !important;
+    width: 100% !important;
+    cursor: pointer !important;
+}
+
+.flatpickr-calendar {
+    background: var(--nav-bg) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.flatpickr-day {
+    color: var(--text-light) !important;
+}
+
+.flatpickr-day.selected {
+    background: var(--sahara-sand) !important;
+    color: var(--sahara-black) !important;
+    border-color: var(--sahara-sand) !important;
+}
+
+.flatpickr-day:hover {
+    background: rgba(247, 255, 152, 0.2) !important;
+}
+
+.flatpickr-current-month,
+.flatpickr-monthDropdown-months,
+.flatpickr-weekday {
+    color: var(--text-light) !important;
+}
+
+.flatpickr-time input {
+    color: var(--text-light) !important;
+}
+
+.flatpickr-time .flatpickr-am-pm {
+    color: var(--text-light) !important;
+}
+
+.error-message {
+    color: #ff4444;
+    margin: 1rem 0;
+    padding: 0.5rem;
+    border-radius: 4px;
+    background: rgba(255, 68, 68, 0.1);
+    display: none;
+}
+
+.error-message.visible {
+    display: block;
+}
+
+/* Стили для поиска в Event Details */
+.search-group {
+    margin-bottom: 1rem;
+}
+
+.search-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.username-search {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    padding: 0.75rem;
+    border-radius: 6px;
+    width: 100%;
+    font-family: 'Manrope', sans-serif;
+}
+
+.username-search:focus {
+    outline: none;
+    border-color: var(--sahara-sand);
+}
+
+.search-result {
+    font-size: 0.9rem;
+    min-width: 120px;
+}
+
+.search-result.found {
+    color: var(--sahara-sand);
+}
+
+.search-result.not-found {
+    color: #ff4444;
+}
+
+.highlight {
+    background: rgba(247, 255, 152, 0.2);
+    padding: 2px 0;
+    border-radius: 2px;
+}
+
+/* Стили для глобальной статистики */
+.global-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+}
+
+.stat-label {
+    color: var(--sahara-sand);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+/* Стили для элементов таблицы лидерборда */
+.username {
+    color: var(--sahara-sand);
+    font-weight: 600;
+}
+
+.op-amount {
+    color: var(--status-completed);
+    font-weight: 600;
+}
+
+.events-count {
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.average-op {
+    color: var(--status-pending);
+    font-weight: 600;
+}
+
+.highest-op {
+    color: var(--sahara-sand);
+    font-weight: 600;
+}
+
+/* Анимация для строк таблицы */
+#leaderboardTable tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+#leaderboardTable tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Стили для топ-3 мест */
+#leaderboardTable tbody tr:nth-child(1) .rank {
+    color: gold;
+    font-weight: bold;
+}
+
+#leaderboardTable tbody tr:nth-child(2) .rank {
+    color: silver;
+    font-weight: bold;
+}
+
+#leaderboardTable tbody tr:nth-child(3) .rank {
+    color: #cd7f32;
+    font-weight: bold;
+}
+
+/* Page Transitions */
+.page-transition {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.page-transition.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Loading Animation */
+.dataTables_processing {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    margin-left: -50%;
+    text-align: center;
+    background: rgba(38, 50, 56, 0.9);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0.5rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .nav-items {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .create-event-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .main-container {
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .distribution-entry {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    /* Mobile Table Styles */
+    table.dataTable {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    table.dataTable thead th {
+        white-space: nowrap;
+        min-width: 120px;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        width: 100%;
+        margin: 0.5rem 0;
+    }
+
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        width: 100%;
+        text-align: left;
+    }
+}
+
+/* Table Loading Skeleton */
+.skeleton-loading {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.skeleton-loading::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.05) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Column Filters */
+.column-filter-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.column-filter-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.column-filter-button svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    opacity: 0.5;
+}
+
+.column-filter-button.active svg {
+    opacity: 1;
+    color: var(--sahara-sand);
+}
+
+.column-filter-popup {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--nav-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    min-width: 200px;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.column-filter-popup.active {
+    display: block;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.filter-group:last-child {
+    margin-bottom: 0;
+}
+
+.filter-group label {
+    color: var(--sahara-sand);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.filter-group input,
+.filter-group select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 0.5rem;
+    color: var(--text-light);
+    width: 100%;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: var(--sahara-sand);
+}
+
+.filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.filter-actions button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.filter-actions .apply-filter {
+    background: var(--sahara-sand);
+    color: var(--sahara-black);
+}
+
+.filter-actions .clear-filter {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+}
+
+/* Relative positioning for table headers */
+table.dataTable thead th {
+    position: relative;
+}
+
+/* New style for table caption in DataTables */
+table.display caption {
+    text-align: center;
+    font-size: 2em;
+    font-weight: bold;
+    padding: 1em 0;
+    background: linear-gradient(to right, #f5f7fa, #c3cfe2);
+    border-bottom: 2px solid #ccc;
+    color: #333;
+    letter-spacing: 2px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Requestor Link Styling - Updated to Sahara style */
+.requestor-link {
+    color: #d2a679; /* warm sand tone */
+    text-decoration: none;
+}
+.requestor-link:hover {
+    color: #b58a5f; /* slightly darker for hover effect */
+    text-decoration: underline;
+}
+
+/* Custom styled status filter dropdown */
+.status-filter {
+    background: var(--nav-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-weight: bold;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23d2a679" height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+}
+
+.status-filter.pending {
+    background: var(--status-pending);
+    color: #000;
+}
+
+.status-filter.completed {
+    background: var(--status-completed);
+    color: #000;
+}
+
+.status-filter.rejected {
+    background: var(--status-rejected);
+    color: #000;
+}
+
+/* Custom Interactive Color Status Filter */
+.status-filter-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+.status-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    background-color: var(--nav-bg);
+    color: var(--text-light);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    outline: none;
+}
+.status-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+.status-btn:focus {
+    outline: 2px solid var(--sahara-sand);
+    outline-offset: 2px;
+}
+.status-btn.active {
+    box-shadow: inset 0 0 0 2px var(--sahara-sand);
+}
+.status-btn.pending {
+    background-color: var(--status-pending);
+    color: #000;
+}
+.status-btn.completed {
+    background-color: var(--status-completed);
+    color: #000;
+}
+.status-btn.rejected {
+    background-color: var(--status-rejected);
+    color: #000;
+}
+
+/* Table loading state */
+.table-loading {
+    position: relative;
+    min-height: 200px;
+}
+
+.table-loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    z-index: 10;
+}
+
+.table-loading::after {
+    content: 'Loading...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2em;
+    color: #2C3E50;
+    z-index: 11;
+    padding: 20px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+table.dataTable {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s, opacity 0.3s linear;
+}
+
+table.dataTable.initialized {
+    visibility: visible;
+    opacity: 1;
+}
+
+.table-loading thead th {
+    position: relative;
+    overflow: hidden;
+}
+
+.table-loading thead th::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.6;
+    }
+} 

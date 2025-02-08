@@ -1,0 +1,78 @@
+services:
+  # Web Service
+  - type: web
+    name: sahara-points-web
+    env: node
+    buildCommand: |
+      npm install
+      npm run init-db
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      # Discord Bot Token
+      - key: DISCORD_TOKEN
+        sync: false
+      # Discord OAuth Settings
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: DISCORD_CALLBACK_URL
+        value: https://saharapointssender.onrender.com/auth/discord/callback
+      # Session and Security
+      - key: SESSION_SECRET
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: WHITELIST_SECRET
+        sync: false
+      # API Configuration
+      - key: SAHARA_API_URL
+        value: https://saharapointssender.onrender.com
+      - key: ENGAGE_API_URL
+        value: https://engages.io/api/addpoints
+      - key: ENGAGE_API_TOKEN
+        sync: false
+      # PostgreSQL Configuration
+      - key: PGHOST
+        value: ep-rapid-salad-a5ed2vpz-pooler.us-east-2.aws.neon.tech
+      - key: PGDATABASE
+        value: neondb
+      - key: PGUSER
+        value: neondb_owner
+      - key: PGPASSWORD
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+    healthCheckPath: /
+    autoDeploy: true
+
+  # Discord Bot Worker
+  - type: worker
+    name: sahara-points-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python pointssender.py
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Discord Bot Settings
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: LOG_CHANNEL_ID
+        sync: false
+      - key: SAHARA_GUILD_ID
+        sync: false
+      - key: AUTHORIZED_USERS
+        sync: false
+      # API Configuration
+      - key: SAHARA_API_URL
+        value: https://saharapointssender.onrender.com
+      - key: ENGAGE_API_URL
+        value: https://engages.io/api/addpoints
+      - key: ENGAGE_API_TOKEN
+        sync: false
+    autoDeploy: true 

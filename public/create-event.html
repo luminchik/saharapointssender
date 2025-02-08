@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Sahara AI - Create Event</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poly+Sans+Neutral+Wide&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+</head>
+<body>
+    <script>
+        (function() {
+            function setNavbar() {
+                const avatar = document.getElementById('userAvatar');
+                const nameEl = document.getElementById('globalName');
+                const userData = localStorage.getItem('userData');
+                if (avatar && nameEl && userData) {
+                    try {
+                        const user = JSON.parse(userData);
+                        const url = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+                        const tempImg = new Image();
+                        tempImg.onload = function() {
+                            avatar.src = url;
+                            avatar.classList.add('loaded');
+                        };
+                        tempImg.src = url;
+                        if (tempImg.complete) {
+                            avatar.src = url;
+                            avatar.classList.add('loaded');
+                        }
+                        nameEl.textContent = user.global_name || user.username;
+                    } catch (e) {
+                        console.error('Error parsing cached user data:', e);
+                    }
+                }
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setNavbar);
+            } else {
+                setNavbar();
+            }
+        })();
+    </script>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="/" class="home-link">Home Page</a>
+        </div>
+        <div class="nav-items">
+            <a href="/create" class="create-event-btn">Create Event</a>
+            <a href="/leaderboard" class="create-event-btn">Leaderboard</a>
+            <div class="user-profile">
+                <img src="" alt="User Avatar" class="user-avatar" id="userAvatar" loading="lazy">
+                <span class="username" id="globalName"></span>
+                <div class="logout-dropdown">
+                    <a href="/auth/logout" class="logout-btn">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                        </svg>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="header">
+            <div class="page-title">Sahara AI - OP Distribution</div>
+        </div>
+
+        <form id="createEventForm" class="create-event-form">
+            <div class="form-group">
+                <label for="eventDate">Event's Date *</label>
+                <input type="text" id="eventDate" name="eventDate" required readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="eventTitle">
+                    <span class="required">*</span> Event's Title
+                </label>
+                <input type="text" id="eventTitle" name="eventTitle" required>
+            </div>
+
+            <div class="form-group">
+                <label for="requestor">
+                    <span class="required">*</span> Requestor
+                </label>
+                <input type="text" id="requestor" name="requestor" required readonly>
+            </div>
+
+            <div class="distribution-section">
+                <h3>XP Distribution</h3>
+                <div class="distribution-header">
+                    <span>Amount of XP</span>
+                    <span>Name List</span>
+                </div>
+                <div id="distributionList">
+                    <!-- Distribution entries will be added here -->
+                </div>
+                <button type="button" id="addDistribution" class="add-new-btn">Add New Distribution</button>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="submit-btn">Create Event</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="/js/create-event.js"></script>
+</body>
+</html> 

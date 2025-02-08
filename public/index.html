@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Sahara AI - XP Distribution</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poly+Sans+Neutral+Wide&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css">
+</head>
+<body>
+    <script>
+        (function() {
+            function setNavbar() {
+                const avatar = document.getElementById('userAvatar');
+                const nameEl = document.getElementById('globalName');
+                const userData = localStorage.getItem('userData');
+                if (avatar && nameEl && userData) {
+                    try {
+                        const user = JSON.parse(userData);
+                        const url = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+                        const tempImg = new Image();
+                        tempImg.onload = function() {
+                            avatar.src = url;
+                            avatar.classList.add('loaded');
+                        };
+                        tempImg.src = url;
+                        if (tempImg.complete) { 
+                            avatar.src = url;
+                            avatar.classList.add('loaded');
+                        }
+                        nameEl.textContent = user.global_name || user.username;
+                    } catch (e) {
+                        console.error('Error parsing cached user data:', e);
+                    }
+                }
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setNavbar);
+            } else {
+                setNavbar();
+            }
+        })();
+    </script>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="/" class="home-link">Home Page</a>
+        </div>
+        <div class="nav-items">
+            <a href="/create" class="create-event-btn">Create Event</a>
+            <a href="/leaderboard" class="create-event-btn">Leaderboard</a>
+            <div class="user-profile">
+                <img src="" alt="User Avatar" class="user-avatar" id="userAvatar" loading="lazy">
+                <span class="username" id="globalName"></span>
+                <div class="logout-dropdown">
+                    <a href="/auth/logout" class="logout-btn">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                        </svg>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="header">
+            <!-- Removed the page-title div -->
+        </div>
+
+        <div class="table-container table-loading">
+            <table id="eventsTable" class="display">
+                <caption style="text-align: center; font-size: 1.5em; padding: 0.5em 0;">Sahara AI - OP Distribution</caption>
+                <thead>
+                    <tr>
+                        <th>Event ID</th>
+                        <th>Event's Date</th>
+                        <th>Event's Title</th>
+                        <th>Requestor</th>
+                        <th>Created At</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+    <!-- Модальное окно для просмотра деталей -->
+    <div class="modal" id="viewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Event Details</h2>
+                <button class="modal-close">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="event-details">
+                <!-- Детали события будут добавлены динамически -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html> 
