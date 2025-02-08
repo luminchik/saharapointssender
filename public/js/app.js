@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
         table = $('#eventsTable').DataTable({
             serverSide: false,
             processing: true,
-            ordering: false,
+            order: [[0, 'desc']], // Сортировка по ID по убыванию
             ajax: {
                 url: '/api/events',
                 type: 'GET',
@@ -115,11 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             ],
-            order: [[1, 'desc']],
-            pageLength: 10,
-            language: {
-                processing: '<div class="skeleton-loading">Loading...</div>'
-            },
             initComplete: function() {
                 // Remove loading state
                 document.querySelector('.table-container').classList.remove('table-loading');
@@ -130,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const column = this;
                     const header = $(column.header());
                     
-                    if (index === 1 || index === 5) { // Date & Status columns keep standard filter popup
+                    if (index === 1) { // Date column
                         const button = $(
                             `<button class="column-filter-button">
                                 <span>${header.text()}</span>
@@ -141,16 +136,105 @@ document.addEventListener('DOMContentLoaded', function() {
                         );
                         const popup = $(
                             `<div class="column-filter-popup">
-                                ${getFilterContent(index)}
+                                <div class="filter-group">
+                                    <label>From</label>
+                                    <input type="date" class="date-filter" data-type="from">
+                                </div>
+                                <div class="filter-group">
+                                    <label>To</label>
+                                    <input type="date" class="date-filter" data-type="to">
+                                </div>
+                                <div class="filter-actions">
+                                    <button class="clear-filter">Clear</button>
+                                    <button class="apply-filter">Apply</button>
+                                </div>
                             </div>`
                         );
                         header.html(button).append(popup);
-                        button.on('click', function(e) {
-                            e.stopPropagation();
-                            $('.column-filter-popup').not(popup).removeClass('active');
-                            $('.column-filter-button').not(button).removeClass('active');
-                            popup.toggleClass('active');
-                            button.toggleClass('active');
+                        
+                        // Обработчик фильтра даты
+                        popup.find('.apply-filter').on('click', function() {
+                            const from = popup.find('[data-type="from"]').val();
+                            const to = popup.find('[data-type="to"]').val();
+                            
+                            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                                const date = new Date(data[1]).getTime();
+                                const min = from ? new Date(from).getTime() : null;
+                                const max = to ? new Date(to).getTime() : null;
+                                
+                                if (min && max) {
+                                    return date >= min && date <= max;
+                                } else if (min) {
+                                    return date >= min;
+                                } else if (max) {
+                                    return date <= max;
+                                }
+                                return true;
+                            });
+                            
+                            table.draw();
+                            popup.removeClass('active');
+                            button.toggleClass('active', !!(from || to));
+                        });
+                        
+                        popup.find('.clear-filter').on('click', function() {
+                            popup.find('input').val('');
+                            $.fn.dataTable.ext.search.pop();
+                            table.draw();
+                            popup.removeClass('active');
+                            button.removeClass('active');
+                        });
+                    } else if (index === 5) { // Status column
+                        const button = $(
+                            `<button class="column-filter-button">
+                                <span>${header.text()}</span>
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                                </svg>
+                            </button>`
+                        );
+                        const popup = $(
+                            `<div class="column-filter-popup">
+                                <div class="filter-group">
+                                    <div class="status-filter-buttons">
+                                        <button class="status-btn active" data-value="">All</button>
+                                        <button class="status-btn pending" data-value="Pending">Pending</button>
+                                        <button class="status-btn completed" data-value="Completed">Completed</button>
+                                        <button class="status-btn rejected" data-value="Rejected">Rejected</button>
+                                    </div>
+                                </div>
+                                <div class="filter-actions">
+                                    <button class="clear-filter">Clear</button>
+                                    <button class="apply-filter">Apply</button>
+                                </div>
+                            </div>`
+                        );
+                        header.html(button).append(popup);
+                        
+                        // Обработчик кнопок статуса
+                        popup.find('.status-btn').on('click', function() {
+                            popup.find('.status-btn').removeClass('active');
+                            $(this).addClass('active');
+                        });
+                        
+                        // Обработчик фильтра статуса
+                        popup.find('.apply-filter').on('click', function() {
+                            const selectedStatus = popup.find('.status-btn.active').data('value');
+                            if (selectedStatus) {
+                                column.search(selectedStatus).draw();
+                            } else {
+                                column.search('').draw();
+                            }
+                            popup.removeClass('active');
+                            button.toggleClass('active', !!selectedStatus);
+                        });
+                        
+                        popup.find('.clear-filter').on('click', function() {
+                            popup.find('.status-btn').removeClass('active');
+                            popup.find('.status-btn[data-value=""]').addClass('active');
+                            column.search('').draw();
+                            popup.removeClass('active');
+                            button.removeClass('active');
                         });
                     } else if (index === 3) { // Requestor column: remove popup and add clear filter button
                         header.html('<span>' + header.text() + '</span> <button class="clear-requestor-filter" style="display:none; margin-left:5px;">Clear</button>');
@@ -219,91 +303,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp().catch(error => {
         console.error('App initialization failed:', error);
         window.location.href = '/login';
-    });
-
-    // Function to get filter content based on column index
-    function getFilterContent(index) {
-        switch(index) {
-            case 1: // Date
-                return `
-                    <div class="filter-group">
-                        <label>From</label>
-                        <input type="date" class="date-filter" data-type="from">
-                    </div>
-                    <div class="filter-group">
-                        <label>To</label>
-                        <input type="date" class="date-filter" data-type="to">
-                    </div>
-                    <div class="filter-actions">
-                        <button class="clear-filter">Clear</button>
-                        <button class="apply-filter">Apply</button>
-                    </div>
-                `;
-            case 3: // Requestor
-                return `
-                    <div class="filter-group">
-                        <label>Search</label>
-                        <input type="text" class="requestor-filter" placeholder="Enter requestor name">
-                    </div>
-                    <div class="filter-actions">
-                        <button class="clear-filter">Clear</button>
-                        <button class="apply-filter">Apply</button>
-                    </div>
-                `;
-            case 5: // Status
-                return `
-                    <div class="filter-group">
-                        <label>Status</label>
-                        <div class="status-filter-buttons">
-                            <button class="status-btn" data-value="">All</button>
-                            <button class="status-btn pending" data-value="Pending">Pending</button>
-                            <button class="status-btn completed" data-value="Completed">Completed</button>
-                            <button class="status-btn rejected" data-value="Rejected">Rejected</button>
-                        </div>
-                    </div>
-                    <div class="filter-actions">
-                        <button class="clear-filter">Clear</button>
-                        <button class="apply-filter">Apply</button>
-                    </div>
-                `;
-        }
-    }
-
-    // Handle filter actions
-    $(document).on('click', '.apply-filter', function() {
-        const popup = $(this).closest('.column-filter-popup');
-        const column = table.column(popup.parent('th').index());
-        
-        let value = '';
-        if (popup.find('.date-filter').length) {
-            const from = popup.find('[data-type="from"]').val();
-            const to = popup.find('[data-type="to"]').val();
-            if (from || to) {
-                value = `${from}|${to}`;
-            }
-        } else if (popup.find('.status-filter').length) {
-            value = popup.find('.status-filter').val();
-        } else if (popup.find('.requestor-filter').length) {
-            value = popup.find('.requestor-filter').val();
-        }
-        
-        column.search(value).draw();
-        popup.removeClass('active');
-        popup.siblings('.column-filter-button').toggleClass('active', !!value);
-    });
-
-    $(document).on('click', '.clear-filter', function() {
-        const popup = $(this).closest('.column-filter-popup');
-        popup.find('input, select').val('');
-        const column = table.column(popup.parent('th').index());
-        column.search('').draw();
-        popup.removeClass('active');
-        popup.siblings('.column-filter-button').removeClass('active');
-    });
-
-    // Обработчик кнопки Create Event
-    document.querySelector('.create-event-btn').addEventListener('click', () => {
-        // Здесь будет логика создания события
     });
 
     // Функция для отображения деталей события
