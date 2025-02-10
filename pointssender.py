@@ -914,85 +914,91 @@ async def send_all_op_command(interaction: discord.Interaction):
 @client.tree.command(name="history", description="Show OP history for a user", guild=discord.Object(id=SAHARA_GUILD_ID))
 @app_commands.describe(user="User to check history for")
 async def history_command(interaction: discord.Interaction, user: discord.Member):
+    """Command to show OP history for a user."""
     if interaction.guild_id != SAHARA_GUILD_ID:
         await interaction.response.send_message("This command can only be used in the authorized server.", ephemeral=True)
         return
 
     try:
-        await interaction.response.defer(ephemeral=True)
-
-        # Get base URL and headers
-        base_url = os.getenv('SAHARA_API_URL')
-        headers = {
-            'Accept': 'application/json',
-            'x-api-key': os.getenv('ENGAGE_API_TOKEN')
-        }
+        await interaction.response.defer()
 
         async with aiohttp.ClientSession() as session:
-            # Fetch user's history
-            url = f"{base_url}/api/bot/history/{user.id}"
-            print(f"Fetching history from: {url}")  # Debug log
+            url = f"{SAHARA_API_URL}/api/bot/events"
+            headers = {
+                'x-api-key': ENGAGE_API_TOKEN,
+                'Content-Type': 'application/json'
+            }
+            
             async with session.get(url, headers=headers) as response:
-                print(f"Response status: {response.status}")  # Debug log
                 if response.status != 200:
-                    error_text = await response.text()
-                    print(f"Error response: {error_text}")  # Debug log
-                    await interaction.followup.send(f"❌ Failed to fetch history for {user.mention}")
+                    logger.error(f"Error fetching events: {response.status}")
+                    await interaction.followup.send("Failed to fetch user history.", ephemeral=True)
+                    return
+                
+                data = await response.json()
+                if not data or 'data' not in data:
+                    await interaction.followup.send("No event data found.", ephemeral=True)
                     return
 
-                history = await response.json()
-                print(f"Received history: {history}")  # Debug log
+                events = data['data']
+                user_history = []
+                total_op = 0
 
-                if not history or not history.get('events'):
-                    await interaction.followup.send(f"📊 No OP history found for {user.mention}")
+                for event in events:
+                    if event['status'] != 'Completed':
+                        continue
+                        
+                    for dist in event['distributions']:
+                        name_list = dist['nameList'].split('\n')
+                        if user.name in name_list or user.global_name in name_list:
+                            user_history.append({
+                                'event_id': event['id'],
+                                'date': event['eventDate'],
+                                'title': event['title'],
+                                'amount': dist['xpAmount']
+                            })
+                            total_op += dist['xpAmount']
+
+                if not user_history:
+                    await interaction.followup.send(f"No OP history found for {user.mention}.", ephemeral=True)
                     return
 
                 # Create embed for history
                 embed = discord.Embed(
-                    title=f"📊 OP History for {user.display_name}",
+                    title=f"OP History for {user.display_name}",
                     color=discord.Color.blue()
                 )
-
-                # Add total stats
-                total_op = sum(event['amount'] for event in history['events'])
+                
+                # Add total OP field
                 embed.add_field(
-                    name="Total OP Received",
-                    value=f"```{total_op:,} OP```",
+                    name="Total OP Earned",
+                    value=f"**{total_op:,}** OP",
                     inline=False
                 )
 
-                # Add recent events (last 5)
-                recent_events = history['events'][:5]
+                # Sort history by date (newest first)
+                user_history.sort(key=lambda x: x['date'], reverse=True)
+
+                # Add last 5 events
+                recent_events = user_history[:5]
                 if recent_events:
-                    recent_history = "\n".join(
-                        f"• {event['amount']:,} OP - {event['title']} ({event['date']})"
-                        for event in recent_events
-                    )
+                    history_text = ""
+                    for entry in recent_events:
+                        date = datetime.fromisoformat(entry['date'].replace('Z', '+00:00'))
+                        formatted_date = date.strftime("%Y-%m-%d")
+                        history_text += f"• {formatted_date}: **{entry['amount']:,}** OP - {entry['title']}\n"
+                    
                     embed.add_field(
                         name="Recent Events",
-                        value=f"```{recent_history}```",
+                        value=history_text,
                         inline=False
                     )
-
-                # Add average stats
-                avg_op = total_op / len(history['events'])
-                embed.add_field(
-                    name="Average OP per Event",
-                    value=f"```{int(avg_op):,} OP```",
-                    inline=True
-                )
-
-                embed.add_field(
-                    name="Total Events",
-                    value=f"```{len(history['events'])}```",
-                    inline=True
-                )
 
                 await interaction.followup.send(embed=embed)
 
     except Exception as e:
-        print(f"Error in history command: {e}")
-        await interaction.followup.send("❌ An error occurred while fetching history")
+        logger.error(f"Error in history command: {e}")
+        await interaction.followup.send(f"An error occurred while fetching history.", ephemeral=True)
 
 class WhitelistCommands(app_commands.Group):
     def __init__(self):
