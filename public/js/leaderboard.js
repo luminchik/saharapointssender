@@ -1,70 +1,68 @@
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing leaderboard...');
+    
     // Initialize DataTable for leaderboard
     const leaderboardTable = $('#leaderboardTable').DataTable({
         ajax: {
             url: '/api/leaderboard',
             dataSrc: function(json) {
-                console.log('Raw server response:', json);
+                console.log('Received data from server:', json);
                 
-                // Проверяем наличие данных и обновляем глобальную статистику
                 if (json && json.globalStats) {
-                    console.log('Global stats found:', json.globalStats);
+                    console.log('Updating global stats...');
                     updateGlobalStats(json.globalStats);
-                } else {
-                    console.warn('No global stats in response');
                 }
 
-                // Проверяем и возвращаем данные лидерборда
                 if (!json || !json.leaderboard) {
-                    console.error('Invalid data format or no leaderboard data:', json);
+                    console.error('No leaderboard data found');
                     return [];
                 }
 
+                console.log(`Processing ${json.leaderboard.length} entries...`);
                 return json.leaderboard;
+            },
+            error: function(xhr, error, thrown) {
+                console.error('Error loading data:', error);
+                console.error('Server response:', xhr.responseText);
             }
         },
         processing: true,
         serverSide: false,
+        responsive: true,
         columns: [
             { 
                 data: 'rank',
-                title: 'Rank',
                 render: function(data) {
                     return `<span class="rank">#${data}</span>`;
                 }
             },
             { 
                 data: 'username',
-                title: 'User',
                 render: function(data) {
                     return `<span class="username">${data}</span>`;
                 }
             },
             { 
                 data: 'totalOp',
-                title: 'Total OP',
                 render: function(data) {
                     return `<span class="op-amount">${data.toLocaleString()}</span>`;
                 }
             },
             {
                 data: 'averageOp',
-                title: 'Avg OP/Event',
                 render: function(data) {
                     return `<span class="average-op">${data.toLocaleString()}</span>`;
                 }
             },
             {
                 data: 'highestOp',
-                title: 'Highest OP',
                 render: function(data) {
                     return `<span class="highest-op">${data.toLocaleString()}</span>`;
                 }
             }
         ],
-        order: [[2, 'desc']],
+        order: [[0, 'asc']],
         pageLength: 25,
-        dom: '<"top"lf>rt<"bottom"ip><"clear">',
         language: {
             search: "Search users:",
             lengthMenu: "Show _MENU_ users per page",
@@ -74,20 +72,22 @@ document.addEventListener('DOMContentLoaded', function() {
             loadingRecords: 'Loading data...',
             zeroRecords: 'No users found',
             emptyTable: 'No data available'
+        },
+        initComplete: function() {
+            console.log('Table initialization complete');
         }
     });
 
     // Update global statistics
     function updateGlobalStats(stats) {
-        console.log('Updating global stats:', stats);
         if (!stats) {
-            console.warn('No stats provided to updateGlobalStats');
+            console.warn('No stats provided');
             return;
         }
 
         const statsContainer = document.getElementById('globalStats');
         if (!statsContainer) {
-            console.error('Global stats container not found');
+            console.error('Stats container not found');
             return;
         }
 
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         
         statsContainer.innerHTML = statsHtml;
-        console.log('Global stats updated successfully');
+        console.log('Global stats updated');
     }
 
     // Load user data for navbar
