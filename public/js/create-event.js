@@ -8,8 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Инициализация flatpickr для поля даты
     flatpickr(dateInput, {
         dateFormat: "Y-m-d",
-        time_24hr: true,
-        minDate: new Date().setDate(new Date().getDate() - 1) // вчерашний день
+        time_24hr: true
     });
 
     // Функция создания новой строки распределения

@@ -1,6 +1,6 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 
-// Инициализация Discord клиента с расширенными интентами
+// Initialize Discord client with extended intents
 const client = new Client({ 
     intents: [
         GatewayIntentBits.Guilds,
@@ -16,14 +16,14 @@ console.log('Environment check:');
 console.log('- DISCORD_TOKEN:', process.env.DISCORD_TOKEN ? 'Set' : 'Not set');
 console.log('- LOG_CHANNEL_ID:', process.env.LOG_CHANNEL_ID ? 'Set' : 'Not set');
 
-// Очередь логов
+// Log queue
 let logQueue = [];
 let clientReady = false;
 let initializationPromise = null;
 let initializationAttempts = 0;
 const MAX_RETRY_ATTEMPTS = 3;
 
-// Обработка ошибок клиента
+// Handle client errors
 client.on('error', error => {
     console.error('Discord client error:', error);
     clientReady = false;
@@ -38,7 +38,7 @@ client.on('reconnecting', () => {
     console.log('Discord client reconnecting...');
 });
 
-// Функция инициализации клиента
+// Client initialization function
 async function initializeClient() {
     if (initializationPromise) {
         console.log('Using existing initialization promise');
@@ -98,7 +98,7 @@ async function initializeClient() {
     return initializationPromise;
 }
 
-// Обработка очереди логов
+// Process log queue
 async function processLogQueue() {
     if (!clientReady) {
         console.log('Client not ready, waiting...');
@@ -126,7 +126,7 @@ async function processLogQueue() {
     }
 }
 
-// Функция отправки лога в Discord
+// Function to send log to Discord
 async function sendLogToDiscord(data) {
     const { action, userId, username, details } = data;
     
@@ -186,7 +186,7 @@ async function sendLogToDiscord(data) {
 }
 
 const Logger = {
-    // Отправка лога в Discord
+    // Send log to Discord
     log: async (data) => {
         const { action, userId, username, details } = data;
         
@@ -219,34 +219,34 @@ const Logger = {
         }
     },
 
-    // Вспомогательные функции
+    // Helper functions
     getColorForAction: (action) => {
         const colors = {
-            // Аутентификация
-            'LOGIN': 0x00ff00,          // Зеленый
-            'LOGOUT': 0xff9900,         // Оранжевый
+            // Authentication
+            'LOGIN': 0x00ff00,          // Green
+            'LOGOUT': 0xff9900,         // Orange
             
-            // События
-            'CREATE_EVENT': 0x00ccff,   // Голубой
-            'EDIT_EVENT': 0xffcc00,     // Желтый
-            'DELETE_EVENT': 0xff0000,   // Красный
-            'VIEW_EVENT': 0x999999,     // Серый
+            // Events
+            'CREATE_EVENT': 0x00ccff,   // Cyan
+            'EDIT_EVENT': 0xffcc00,     // Yellow
+            'DELETE_EVENT': 0xff0000,   // Red
+            'VIEW_EVENT': 0x999999,     // Gray
             
-            // Вайтлист
+            // Whitelist
             'WHITELIST_ADD': 0x7289da,  // Discord Blurple
-            'WHITELIST_REMOVE': 0xff6b6b, // Красный
+            'WHITELIST_REMOVE': 0xff6b6b, // Red
             
-            // Распределения
-            'ADD_DISTRIBUTION': 0x2ecc71, // Зеленый
-            'REMOVE_DISTRIBUTION': 0xe74c3c, // Красный
-            'EDIT_DISTRIBUTION': 0xf1c40f, // Желтый
+            // Distributions
+            'ADD_DISTRIBUTION': 0x2ecc71, // Green
+            'REMOVE_DISTRIBUTION': 0xe74c3c, // Red
+            'EDIT_DISTRIBUTION': 0xf1c40f, // Yellow
             
-            // Статусы
-            'STATUS_CHANGE': 0x9b59b6,   // Фиолетовый
+            // Statuses
+            'STATUS_CHANGE': 0x9b59b6,   // Purple
 
             // OP Distribution
-            'SEND_OP': 0x1abc9c,        // Бирюзовый
-            'SEND_OP_FAILED': 0xe74c3c  // Красный
+            'SEND_OP': 0x1abc9c,        // Cyan
+            'SEND_OP_FAILED': 0xe74c3c  // Red
         };
         return colors[action] || 0x7289da;
     }
@@ -264,7 +264,7 @@ function formatDetails(details) {
     return 'No details provided';
 }
 
-// Инициализируем клиент при запуске
+// Initialize client on startup
 initializeClient().catch(error => {
     console.error('Failed to initialize Discord client:', error);
 });

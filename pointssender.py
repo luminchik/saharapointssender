@@ -43,7 +43,7 @@ PAUSED_EVENTS = set()  # Stores IDs of paused events
 # List of authorized Discord user IDs
 AUTHORIZED_USERS = [int(id.strip()) for id in os.getenv('AUTHORIZED_USERS').split(',')]
 
-# Добавляем конфигурацию для rate limiting
+# Rate limiting configuration
 RATE_LIMIT = {
     'requests_per_minute': 30,  # Maximum requests per minute
     'delay_between_requests': 0.5,  # Delay between requests in seconds
@@ -59,7 +59,7 @@ class PauseManager:
         self._load_paused_events()
 
     def _load_paused_events(self):
-        """Загружает список приостановленных событий из файла"""
+        """Loads the list of paused events from a file"""
         try:
             if os.path.exists(self.pause_file):
                 with open(self.pause_file, 'r') as f:
@@ -69,7 +69,7 @@ class PauseManager:
             self.paused_events = {}
 
     def _save_paused_events(self):
-        """Сохраняет список приостановленных событий в файл"""
+        """Saves the list of paused events to a file"""
         try:
             with open(self.pause_file, 'w') as f:
                 json.dump(self.paused_events, f)
@@ -77,7 +77,7 @@ class PauseManager:
             logger.error(f"Error saving paused events: {e}")
 
     def pause_event(self, event_id: str) -> bool:
-        """Приостанавливает событие"""
+        """Pauses an event"""
         if event_id not in self.paused_events:
             self.paused_events[event_id] = time.time()
             self._save_paused_events()
@@ -85,7 +85,7 @@ class PauseManager:
         return False
 
     def resume_event(self, event_id: str) -> bool:
-        """Возобновляет событие"""
+        """Resumes an event"""
         if event_id in self.paused_events:
             del self.paused_events[event_id]
             self._save_paused_events()
@@ -93,11 +93,11 @@ class PauseManager:
         return False
 
     def is_paused(self, event_id: str) -> bool:
-        """Проверяет, приостановлено ли событие"""
+        """Checks if an event is paused"""
         return event_id in self.paused_events
 
     def get_pause_duration(self, event_id: str) -> float:
-        """Возвращает длительность паузы в секундах"""
+        """Returns the duration of the pause in seconds"""
         if event_id in self.paused_events:
             return time.time() - self.paused_events[event_id]
         return 0
@@ -109,7 +109,7 @@ class DistributionProgress:
         self._load_progress()
 
     def _load_progress(self):
-        """Загружает прогресс дистрибуции из файла"""
+        """Loads distribution progress from a file"""
         try:
             if os.path.exists(self.progress_file):
                 with open(self.progress_file, 'r') as f:
@@ -119,7 +119,7 @@ class DistributionProgress:
             self.active_distributions = {}
 
     def _save_progress(self):
-        """Сохраняет прогресс дистрибуции в файл"""
+        """Saves distribution progress to a file"""
         try:
             with open(self.progress_file, 'w') as f:
                 json.dump(self.active_distributions, f)
@@ -127,7 +127,7 @@ class DistributionProgress:
             logger.error(f"Error saving distribution progress: {e}")
 
     def start_distribution(self, event_id: str, distributions: list):
-        """Начинает новую дистрибуцию"""
+        """Starts a new distribution"""
         self.active_distributions[event_id] = {
             'distributions': distributions,
             'current_dist_index': 0,
@@ -138,7 +138,7 @@ class DistributionProgress:
         self._save_progress()
 
     def update_progress(self, event_id: str, dist_index: int, user_index: int, user_id: str):
-        """Обновляет прогресс дистрибуции"""
+        """Updates distribution progress"""
         if event_id in self.active_distributions:
             self.active_distributions[event_id]['current_dist_index'] = dist_index
             self.active_distributions[event_id]['current_user_index'] = user_index
@@ -147,16 +147,16 @@ class DistributionProgress:
             self._save_progress()
 
     def get_progress(self, event_id: str):
-        """Получает текущий прогресс дистрибуции"""
+        """Gets the current distribution progress"""
         return self.active_distributions.get(event_id)
 
     def remove_distribution(self, event_id: str):
-        """Удаляет дистрибуцию после завершения"""
+        """Removes a distribution after completion"""
         if event_id in self.active_distributions:
             del self.active_distributions[event_id]
             self._save_progress()
 
-# Создаем глобальные экземпляры менеджеров
+# Create global instances of managers
 pause_manager = PauseManager()
 distribution_manager = DistributionProgress()
 
@@ -168,9 +168,16 @@ class OPBot(discord.Client):
         self.tree = app_commands.CommandTree(self)
 
     async def setup_hook(self):
+        # Only allow commands in the specified guild
         whitelist_commands = WhitelistCommands()
-        self.tree.add_command(whitelist_commands)
-        await self.tree.sync()
+        self.tree.add_command(whitelist_commands, guild=discord.Object(id=SAHARA_GUILD_ID))
+        await self.tree.sync(guild=discord.Object(id=SAHARA_GUILD_ID))
+
+    async def on_guild_join(self, guild):
+        """Handle when bot joins a guild."""
+        if guild.id != SAHARA_GUILD_ID:
+            logger.warning(f"Bot joined unauthorized guild {guild.name} ({guild.id}). Leaving...")
+            await guild.leave()
 
     async def format_log_embed(self, logs, log_type=None):
         """Format logs into a Discord embed."""
@@ -186,7 +193,7 @@ class OPBot(discord.Client):
             user = log.get('user', 'System')
             action = log.get('action', 'Unknown action')
             details = log.get('details', '')
-            
+
             # Choose emoji based on log type
             type_emoji = {
                 'login': '🔐',
@@ -194,13 +201,13 @@ class OPBot(discord.Client):
                 'whitelist': '📝',
                 'other': '📌'
             }.get(log.get('type', 'other'), '📌')
-            
+
             # Format log entry
             log_text = f"**User:** {user}\n"
             log_text += f"**Action:** {action}\n"
             if details:
                 log_text += f"**Details:** {details}\n"
-            
+
             # Add field for this log
             embed.add_field(
                 name=f"{type_emoji} {timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
@@ -214,7 +221,7 @@ class OPBot(discord.Client):
         """Background task to check for new logs."""
         await self.wait_until_ready()
         self.log_channel = self.get_channel(LOG_CHANNEL_ID)
-        
+
         if not self.log_channel:
             logger.error(f"Could not find log channel with ID {LOG_CHANNEL_ID}")
             return
@@ -224,12 +231,12 @@ class OPBot(discord.Client):
                 # Get new logs from API
                 base_url = SAHARA_API_URL.rstrip('/')
                 url = f"{base_url}/api/logs"
-                
+
                 params = {
                     'after': self.last_log_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
                     'limit': 10  # Fetch up to 10 new logs at a time
                 }
-                
+
                 headers = {
                     'Content-Type': 'application/json',
                     'x-api-key': API_HEADERS['x-api-key']
@@ -240,7 +247,7 @@ class OPBot(discord.Client):
                         if response.status == 200:
                             logs_data = await response.json()
                             new_logs = logs_data.get('logs', [])
-                            
+
                             if new_logs:
                                 # Group logs by type
                                 grouped_logs = {}
@@ -249,12 +256,12 @@ class OPBot(discord.Client):
                                     if log_type not in grouped_logs:
                                         grouped_logs[log_type] = []
                                     grouped_logs[log_type].append(log)
-                                
+
                                 # Send embed for each type of logs
                                 for log_type, logs in grouped_logs.items():
                                     embed = await self.format_log_embed(logs, log_type)
                                     await self.log_channel.send(embed=embed)
-                                
+
                                 # Update last check time
                                 if new_logs:
                                     latest_time = max(
@@ -265,7 +272,7 @@ class OPBot(discord.Client):
 
             except Exception as e:
                 logger.error(f"Error in log checking task: {e}")
-            
+
             # Wait before next check
             await asyncio.sleep(30)  # Check every 30 seconds
 
@@ -291,7 +298,7 @@ async def get_event_distributions(session: aiohttp.ClientSession, event_id: str)
         }
         url = f'{base_url}/api/events/{event_id}'
         logger.info(f"Fetching event distributions from: {url}")
-        
+
         async with session.get(url, headers=headers) as response:
             if response.status == 200:
                 event_data = await response.json()
@@ -311,7 +318,6 @@ async def get_event_distributions(session: aiohttp.ClientSession, event_id: str)
         return None
 
 async def get_event_status(event_id: str) -> dict:
-    """Получаем статус события."""
     try:
         base_url = SAHARA_API_URL.rstrip('/')
         url = f"{base_url}/api/bot/events/{event_id}"
@@ -319,17 +325,17 @@ async def get_event_status(event_id: str) -> dict:
             'Content-Type': 'application/json',
             'x-api-key': API_HEADERS['x-api-key']
         }
-        
+
         logger.info(f"Fetching event status from: {url}")
         logger.info(f"Using headers: {headers}")
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=headers) as response:
                 if response.status != 200:
                     error_text = await response.text()
                     logger.error(f"Error getting event {event_id}. Status: {response.status}, Response: {error_text}")
                     return None
-                
+
                 event_data = await response.json()
                 return event_data
     except Exception as e:
@@ -337,14 +343,14 @@ async def get_event_status(event_id: str) -> dict:
         return None
 
 async def send_op_to_user(session: aiohttp.ClientSession, user_id: str, points: int, reason: str = '', event_id: int = 0, delay: float = 0.5) -> bool:
-    """Отправляем OP пользователю через Engage API."""
+    """Send OP to user through Engage API."""
     try:
-        # Добавляем задержку для избежания rate limiting
+        # Add delay to avoid rate limiting
         await asyncio.sleep(delay)
-        
-        # Формируем URL с параметрами
+
+        # Form URL with parameters
         url = f"{os.getenv('ENGAGE_API_URL')}?userId={user_id}&points={points}"
-        
+
         headers = {
             'x-api-key': os.getenv('ENGAGE_API_TOKEN'),
             'Content-Type': 'application/json'
@@ -371,17 +377,17 @@ async def send_op_to_user(session: aiohttp.ClientSession, user_id: str, points: 
         return False
 
 async def update_event_status(session: aiohttp.ClientSession, event_id: str, status: str) -> bool:
-    """Обновляем статус события через API."""
+    """Updates the event status via API."""
     try:
-        # Логируем начальные параметры
+        # Log initial parameters
         logger.info(f"Starting status update for event {event_id} to status {status}")
-        
-        # Формируем URL и убираем двойные слеши
+
+        # Form URL and remove double slashes
         base_url = SAHARA_API_URL.rstrip('/')
         full_url = f'{base_url}/api/bot/events/{event_id}'
         logger.info(f"Request URL: {full_url}")
-        
-        # Подготавливаем заголовки и данные (используем те же, что в test_api.js)
+
+        # Prepare headers and data (use the same as in test_api.js)
         headers = {
             'Content-Type': 'application/json',
             'x-api-key': '13f0868c-0a20-4b17-a3f5-bac5c6dee4d0',
@@ -392,84 +398,88 @@ async def update_event_status(session: aiohttp.ClientSession, event_id: str, sta
             'editor': 'Bot',
             'changes': f'Status updated to {status}'
         }
-        
-        # Логируем заголовки и данные
+
+        # Log headers and data
         logger.info(f"Request headers: {headers}")
         logger.info(f"Request data: {update_data}")
-        
-        # Делаем запрос с таймаутом
+
+        # Make request with timeout
         async with session.put(
             full_url,
             headers=headers,
             json=update_data,
             timeout=30
         ) as response:
-            # Получаем ответ
+            # Get response
             response_text = await response.text()
             logger.info(f"Response status: {response.status}")
             logger.info(f"Response body: {response_text}")
-            
+
             if response.status == 200:
                 logger.info(f"Successfully updated event {event_id} status to {status}")
                 return True
-            
+
             logger.error(f"Failed to update status. Status code: {response.status}")
             logger.error(f"Error response: {response_text}")
             return False
-            
+
     except Exception as e:
         logger.error(f"Error updating event status: {str(e)}")
         return False
 
 async def get_user_id_by_name(guild: discord.Guild, username: str) -> str:
-    """Получаем Discord ID пользователя по его имени или ID."""
+    """Gets the Discord ID of a user by their name or ID."""
     try:
-        # Очищаем имя от пробелов
+        # Trim whitespace from the name
         username = username.strip()
-        
-        # Если передан ID напрямую
+
+        # If ID is passed directly
         if username.isdigit():
-            # Проверяем, существует ли пользователь с таким ID
+            # Check if a user with this ID exists
             member = guild.get_member(int(username))
             if member:
                 logger.info(f"Found user by ID: {username}")
                 return username
-        
-        # Очищаем имя от специальных символов (@, пробелы в начале и конце)
+
+        # Trim special characters (@, leading/trailing spaces) from the name
         clean_name = username.lstrip('@').strip()
-        
-        # Сначала ищем точное совпадение по global_name
+
+        # First, search for an exact match by global_name
         member = discord.utils.get(guild.members, global_name=clean_name)
         if member:
             logger.info(f"Found user by global_name: {clean_name} -> {member.id}")
             return str(member.id)
-            
-        # Затем ищем по username
+
+        # Then, search by username
         member = discord.utils.get(guild.members, name=clean_name)
         if member:
             logger.info(f"Found user by username: {clean_name} -> {member.id}")
             return str(member.id)
-            
-        # Если не нашли, логируем ошибку
+
+        # If not found, log an error
         logger.error(f"Could not find user with name/id: {username}")
         return None
-        
-    except Exception as e:
+
+    except Exception as e:  
         logger.error(f"Error getting user ID for {username}: {str(e)}")
         return None
 
-@client.tree.command(name="sendop", description="Send OP to users from event")
-@app_commands.describe(event_id="ID события (только число)")
+@client.tree.command(name="sendop", description="Send OP to users from event", guild=discord.Object(id=SAHARA_GUILD_ID))
+@app_commands.describe(event_id="Event ID (numbers only)")
 async def send_op_command(interaction: discord.Interaction, event_id: str):
     try:
+        # Check if command is used in the correct guild
+        if interaction.guild_id != SAHARA_GUILD_ID:
+            await interaction.response.send_message("This command can only be used in the authorized server.", ephemeral=True)
+            return
+
         if not interaction.response.is_done():
             await interaction.response.defer()
-        
+
         if interaction.user.id not in AUTHORIZED_USERS:
             await interaction.followup.send("You are not authorized to use this command.", ephemeral=True)
             return
 
-        # Проверяем, не на паузе ли событие
         if pause_manager.is_paused(event_id):
             await interaction.followup.send(
                 embed=discord.Embed(
@@ -477,17 +487,16 @@ async def send_op_command(interaction: discord.Interaction, event_id: str):
                     description=f"Event #{event_id} is currently paused.\n"
                                f"Use `/resume {event_id}` to continue distribution.",
                     color=discord.Color.orange()
-                )
+                ),
+                ephemeral=True
             )
             return
 
-        # Получаем данные события
         event_data = await get_event_status(event_id)
         if not event_data:
             await interaction.followup.send(f"❌ Cannot distribute OP: Unable to get status for Event #{event_id}", ephemeral=True)
             return
 
-        # Проверяем статус события
         if event_data.get('status', '').lower() != 'pending':
             await interaction.followup.send(
                 f"❌ Cannot distribute OP: Event #{event_id} is not in Pending status (current status: {event_data.get('status')})",
@@ -495,29 +504,17 @@ async def send_op_command(interaction: discord.Interaction, event_id: str):
             )
             return
 
-        # Получаем распределения из события
         distributions = event_data.get('distributions', [])
         if not distributions:
             await interaction.followup.send(f"❌ No distributions found in Event #{event_id}", ephemeral=True)
             return
 
-        # Создаем начальный эмбед
-        start_embed = discord.Embed(
-            title=f"🚀 Starting OP Distribution",
-                        description=f"**Event #{event_id}**",
-            color=discord.Color.blue()
-        )
-        start_embed.add_field(name="Event Title", value=f"```{event_data.get('title')}```", inline=False)
-        start_embed.add_field(name="Event Date", value=f"```{event_data.get('eventDate')}```", inline=True)
-        start_embed.add_field(name="Requestor", value=f"```{event_data.get('requestor')}```", inline=True)
-
-        await interaction.followup.send(embed=start_embed)
-
-        # Используем process_single_event для обработки события
-        success, summary_message = await process_single_event(interaction, event_id, interaction.channel)
+        # Format the date in the required format
+        event_date = datetime.fromisoformat(event_data.get('eventDate').replace('Z', '+00:00')).strftime('%Y-%m-%d')
         
+        success, summary_message = await process_single_event(interaction, event_id, interaction.channel)
+
         if not success and pause_manager.is_paused(event_id):
-            # Если процесс был остановлен из-за паузы, не отправляем дополнительных сообщений
             return
         elif not success:
             await interaction.followup.send("❌ Failed to process event", ephemeral=True)
@@ -526,7 +523,7 @@ async def send_op_command(interaction: discord.Interaction, event_id: str):
         logger.error(f"Error in send_op_command: {str(e)}")
         await interaction.followup.send(f"❌ An error occurred: {str(e)}", ephemeral=True)
 
-@client.tree.command(name="setstatus", description="Set event status (Admin only)")
+@client.tree.command(name="setstatus", description="Set event status (Admin only)", guild=discord.Object(id=SAHARA_GUILD_ID))
 @app_commands.describe(
     event_id="Event ID",
     status="New status"
@@ -538,16 +535,20 @@ async def send_op_command(interaction: discord.Interaction, event_id: str):
 ])
 async def set_status_command(interaction: discord.Interaction, event_id: str, status: app_commands.Choice[str]):
     """Command to update the event status."""
+    if interaction.guild_id != SAHARA_GUILD_ID:
+        await interaction.response.send_message("This command can only be used in the authorized server.", ephemeral=True)
+        return
+
     if interaction.user.id not in AUTHORIZED_USERS:
         await interaction.response.send_message("You are not authorized to use this command.", ephemeral=True)
         return
 
     try:
         await interaction.response.send_message(f"Updating event {event_id} status to {status.value}...")
-        
+
         async with aiohttp.ClientSession() as session:
             success = await update_event_status(session, event_id, status.value)
-            
+
             if success:
                 await interaction.followup.send(f"✅ Successfully updated event {event_id} status to {status.value}", ephemeral=True)
             else:
@@ -557,10 +558,14 @@ async def set_status_command(interaction: discord.Interaction, event_id: str, st
         logger.error(f"Error in set_status_command: {e}")
         await interaction.followup.send(f"An error occurred: {str(e)}", ephemeral=True)
 
-@client.tree.command(name="pause", description="Pause OP distribution for an event")
+@client.tree.command(name="pause", description="Pause OP distribution for an event", guild=discord.Object(id=SAHARA_GUILD_ID))
 @app_commands.describe(event_id="Event ID to pause")
 async def pause_distribution(interaction: discord.Interaction, event_id: str):
-    """Приостанавливает распределение OP для указанного события."""
+    """Pauses OP distribution for the specified event."""
+    if interaction.guild_id != SAHARA_GUILD_ID:
+        await interaction.response.send_message("This command can only be used in the authorized server.", ephemeral=True)
+        return
+
     if interaction.user.id not in AUTHORIZED_USERS:
         await interaction.response.send_message(
             "You are not authorized to use this command.",
@@ -569,7 +574,7 @@ async def pause_distribution(interaction: discord.Interaction, event_id: str):
         return
 
     try:
-        # Проверяем существование события
+        # Check if event exists
         event_data = await get_event_status(event_id)
         if not event_data:
             await interaction.response.send_message(
@@ -585,7 +590,7 @@ async def pause_distribution(interaction: discord.Interaction, event_id: str):
                 color=discord.Color.orange()
             )
             embed.add_field(
-                name="Event Details", 
+                name="Event Details",
                 value=f"Title: {event_data.get('title', 'N/A')}\n"
                       f"Status: {event_data.get('status', 'N/A')}"
             )
@@ -606,10 +611,14 @@ async def pause_distribution(interaction: discord.Interaction, event_id: str):
             ephemeral=True
         )
 
-@client.tree.command(name="resume", description="Resume OP distribution for an event")
+@client.tree.command(name="resume", description="Resume OP distribution for an event", guild=discord.Object(id=SAHARA_GUILD_ID))
 @app_commands.describe(event_id="Event ID to resume")
 async def resume_distribution(interaction: discord.Interaction, event_id: str):
-    """Возобновляет распределение OP для указанного события."""
+    """Resumes OP distribution for the specified event."""
+    if interaction.guild_id != SAHARA_GUILD_ID:
+        await interaction.response.send_message("This command can only be used in the authorized server.", ephemeral=True)
+        return
+
     if interaction.user.id not in AUTHORIZED_USERS:
         await interaction.response.send_message(
             "You are not authorized to use this command.",
@@ -620,7 +629,7 @@ async def resume_distribution(interaction: discord.Interaction, event_id: str):
     try:
         if pause_manager.resume_event(event_id):
             progress = distribution_manager.get_progress(event_id)
-            
+
             embed = discord.Embed(
                 title="▶️ Distribution Resumed",
                 description=f"Distribution for Event #{event_id} has been resumed.",
@@ -631,7 +640,7 @@ async def resume_distribution(interaction: discord.Interaction, event_id: str):
                 completed = len(progress['completed_users'])
                 total_distributions = len(progress['distributions'])
                 current_dist = progress['current_dist_index'] + 1
-                
+
                 embed.add_field(
                     name="Progress",
                     value=f"Distribution: {current_dist}/{total_distributions}\n"
@@ -641,7 +650,7 @@ async def resume_distribution(interaction: discord.Interaction, event_id: str):
 
             await interaction.response.send_message(embed=embed)
 
-            # Автоматически продолжаем дистрибуцию
+            # Automatically continue distribution
             if progress:
                 await process_single_event(interaction, event_id, interaction.channel)
             else:
@@ -659,35 +668,48 @@ async def resume_distribution(interaction: discord.Interaction, event_id: str):
         )
 
 async def process_single_event(interaction: discord.Interaction, event_id: str, log_channel):
-    """Обрабатываем одно событие."""
     try:
-        # Получаем данные события
         event_data = await get_event_status(event_id)
         if not event_data:
-            await interaction.followup.send(f"❌ Failed to get event {event_id} data")
+            await interaction.followup.send(f"❌ Failed to get event {event_id} data", ephemeral=True)
             return False, None
+
+        # Format the date in the required format
+        event_date = datetime.fromisoformat(event_data.get('eventDate').replace('Z', '+00:00')).strftime('%Y-%m-%d')
 
         total_users = 0
         successful_sends = 0
-        failed_users = {}  # Изменяем на словарь, где ключ - количество OP
-        not_in_server = {}  # Также группируем по количеству OP
+        failed_users = {}
+        not_in_server = {}
 
-        # Создаем сессию для HTTP запросов
+        # Create initial embed in the new style
+        start_embed = discord.Embed(
+            title="🚀 Starting OP Distribution",
+            color=discord.Color.blue()
+        )
+        start_embed.add_field(name="Event #", value=event_id, inline=True)
+        start_embed.add_field(name="Event Title", value=event_data.get('title'), inline=True)
+        start_embed.add_field(name="Requestor", value=f"{event_data.get('requestor')}", inline=True)
+        start_embed.add_field(name="Event Date", value=event_date, inline=False)
+
+        await interaction.followup.send(embed=start_embed)
+
+        # Create session for HTTP requests
         async with aiohttp.ClientSession() as session:
-            # Обрабатываем каждое распределение
+            # Process each distribution
             distributions = event_data.get('distributions', [])
             for dist_index, dist in enumerate(distributions, 1):
                 points = dist.get('xpAmount', 0)
                 name_list = dist.get('nameList', '').split('\n')
-                
+
                 for username in name_list:
                     if not username.strip():
                         continue
-                        
+
                     total_users += 1
-                    # Получаем Discord ID пользователя
+                    # Get Discord ID of the user
                     user_id = await get_user_id_by_name(interaction.guild, username.strip())
-                    
+
                     if not user_id:
                         logger.error(f"Could not find user ID for username: {username}")
                         if points not in failed_users:
@@ -695,7 +717,7 @@ async def process_single_event(interaction: discord.Interaction, event_id: str, 
                         failed_users[points].append(username.strip())
                         continue
 
-                    # Проверяем, есть ли пользователь в сервере
+                    # Check if the user is in the server
                     member = interaction.guild.get_member(int(user_id))
                     if not member:
                         logger.error(f"User {username} ({user_id}) is not in the server")
@@ -704,7 +726,7 @@ async def process_single_event(interaction: discord.Interaction, event_id: str, 
                         not_in_server[points].append(username.strip())
                         continue
 
-                    # Отправляем поинты
+                    # Send points
                     success = await send_op_to_user(
                         session=session,
                         user_id=user_id,
@@ -716,7 +738,7 @@ async def process_single_event(interaction: discord.Interaction, event_id: str, 
                     if success:
                         successful_sends += 1
                         logger.info(f"Successfully sent {points} OP to {username} ({user_id})")
-                        # Отправляем сообщение в канал о успешной отправке
+                        # Send message to channel about successful send
                         await interaction.followup.send(f"✅ Sent {points} OP to {member.mention}")
                     else:
                         if points not in failed_users:
@@ -724,64 +746,63 @@ async def process_single_event(interaction: discord.Interaction, event_id: str, 
                         failed_users[points].append(username.strip())
                         logger.error(f"Failed to send {points} OP to {username} ({user_id})")
 
-            # Обновляем статус события
+            # Update event status
             status_updated = await update_event_status(session, event_id, "Completed")
 
-        # Создаем embed с результатами
+        # Create embed with results in the new style
         embed = discord.Embed(
             title="📊 Distribution Summary",
             color=discord.Color.blue()
         )
-        
-        # Добавляем информацию о событии
+
         embed.add_field(name="Event #", value=event_id, inline=True)
-        embed.add_field(name="Event Title", value=event_data.get('title', 'N/A'), inline=True)
-        embed.add_field(name="Requestor", value=event_data.get('requestor', 'N/A'), inline=True)
-        embed.add_field(name="Event Date", value=event_data.get('eventDate', 'N/A'), inline=False)
-        
-        # Добавляем статистику
+        embed.add_field(name="Event Title", value=event_data.get('title'), inline=True)
+        embed.add_field(name="Requestor", value=f"{event_data.get('requestor')}", inline=True)
+        embed.add_field(name="Event Date", value=event_date, inline=False)
+
+        # Add statistics
         stats_text = f"✅ Successfully sent: {successful_sends}/{total_users}\n"
         stats_text += f"❌ Failed: {sum(len(users) for users in failed_users.values())}\n"
         if not_in_server:
             stats_text += f"⚠️ Not in server: {sum(len(users) for users in not_in_server.values())}"
-        
+
         embed.add_field(
-            name="Statistics", 
+            name="Statistics",
             value=stats_text,
             inline=False
         )
-        
-        # Если есть пользователи не из сервера, добавляем их в отдельное поле
+
+        # If there are users not in the server, add them to separate field
         if not_in_server:
             not_in_server_text = []
             for points, users in not_in_server.items():
                 not_in_server_text.append(f"{points} OP\n```{chr(10).join(users)}```")
-            
+
             embed.add_field(
                 name="Users Not in Server",
                 value="\n".join(not_in_server_text)[:1024],  # Discord limit
                 inline=False
             )
-        
-        # Если есть неудачные отправки, добавляем их в embed
+
+        # If there are failed sends, add them to embed
         if failed_users:
             failed_text = []
             for points, users in failed_users.items():
                 failed_text.append(f"{points} OP\n```{chr(10).join(users)}```")
-            
+
             embed.add_field(
                 name="Failed Users",
                 value="\n".join(failed_text)[:1024],  # Discord limit
                 inline=False
             )
-        
-        # Добавляем статус обновления
+
+        # Add status update field
         if status_updated:
             embed.add_field(name="Status", value="✅ Event status updated to Completed", inline=False)
         else:
             embed.add_field(name="Status", value="❌ Failed to update event status", inline=False)
 
-        # Отправляем результаты только один раз
+        # Send results only once
         summary_message = await interaction.followup.send(embed=embed)
 
         return True, summary_message
@@ -791,17 +812,17 @@ async def process_single_event(interaction: discord.Interaction, event_id: str, 
         await interaction.followup.send(f"❌ Error processing event {event_id}: {str(e)}")
         return False, None
 
-@client.tree.command(name="sendallop", description="Send OP for all pending events")
+@client.tree.command(name="sendallop", description="Send OP for all pending events", guild=discord.Object(id=SAHARA_GUILD_ID))
 async def send_all_op_command(interaction: discord.Interaction):
-    if interaction.user.id not in AUTHORIZED_USERS:
-        await interaction.response.send_message("You are not authorized to use this command.", ephemeral=True)
+    if interaction.guild_id != SAHARA_GUILD_ID:
+        await interaction.response.send_message("This command can only be used in the authorized server.", ephemeral=True)
         return
 
     try:
         await interaction.response.send_message("🔍 Fetching pending events...")
         command_channel = interaction.channel
-        
-        # Получаем список всех событий, используя тот же endpoint, что и в /sendop
+
+        # Get list of all events using the same endpoint as in /sendop
         async with aiohttp.ClientSession() as session:
             base_url = SAHARA_API_URL.rstrip('/')
             url = f"{base_url}/api/bot/events"
@@ -810,8 +831,8 @@ async def send_all_op_command(interaction: discord.Interaction):
                 'Accept': 'application/json',
                 'x-api-key': os.getenv('ENGAGE_API_TOKEN')
             }
-            
-            # Добавляем параметры запроса
+
+            # Add query parameters
             params = {
                 'draw': '1',
                 'start': '0',
@@ -820,15 +841,15 @@ async def send_all_op_command(interaction: discord.Interaction):
                 'order[0][column]': '0',
                 'order[0][dir]': 'desc'
             }
-            
+
             async with session.get(url, headers=headers, params=params, allow_redirects=False) as response:
-                # Если сервер перенаправляет запрос, значит endpoint неверный
+                # If server redirects request, it means endpoint is incorrect
                 if response.status in (301, 302, 303, 307, 308):
                     redirect_url = response.headers.get('Location', 'unknown')
                     logger.error(f"Redirection detected. Endpoint returned redirect to {redirect_url}")
                     await interaction.followup.send("❌ Failed to fetch events: received a redirect response, endpoint may be incorrect.")
                     return
-                
+
                 if response.status != 200:
                     error_text = await response.text()
                     logger.error(f"Failed to fetch events. Status: {response.status}, Error: {error_text}")
@@ -840,14 +861,14 @@ async def send_all_op_command(interaction: discord.Interaction):
                     await interaction.followup.send("❌ No events found.")
                     return
 
-                # Фильтруем события со статусом Pending
+                # Filter events with status Pending
                 pending_events = [event for event in events_data['data'] if event.get('status') == 'Pending']
-        
+
         if not pending_events:
             await interaction.followup.send("ℹ️ No pending events found.")
             return
-        
-        # Выводим информацию о найденных событиях
+
+        # Output information about found events
         start_embed = discord.Embed(
             title="🚀 Starting Mass OP Distribution",
             description=f"Found **{len(pending_events)}** pending events to process\n\n" +
@@ -856,34 +877,23 @@ async def send_all_op_command(interaction: discord.Interaction):
             color=discord.Color.blue()
         )
         initial_message = await command_channel.send(embed=start_embed)
-        
-        # Обрабатываем каждое событие
+
+        # Process each event
         total_processed = 0
-        summary_links = []  # Список для хранения ссылок на сообщения с результатами
+        summary_links = []  # List to store links to messages with results
         for index, event in enumerate(pending_events, 1):
-            starting_embed = discord.Embed(
-                title="🚀 Starting OP Distribution",
-                color=discord.Color.blue()
-            )
-            starting_embed.add_field(name="Event #", value=f"{event['id']}", inline=False)
-            starting_embed.add_field(name="Event Title", value=f"```{event['title']}```", inline=False)
-            starting_embed.add_field(name="Event Date", value=f"```{event['eventDate']}```", inline=True)
-            starting_embed.add_field(name="Requestor", value=f"```{event['requestor']} ⚡```", inline=True)
-            await initial_message.reply(embed=starting_embed)
-            
-            # Используем ту же функцию для отправки OP, что и в /sendop
             success, summary_message = await process_single_event(interaction, str(event['id']), command_channel)
             if success:
                 total_processed += 1
                 if summary_message:
-                    # Создаем ссылку на сообщение
+                    # Create link to message
                     message_link = f"[Event #{event['id']} Summary](https://discord.com/channels/{interaction.guild_id}/{command_channel.id}/{summary_message.id})"
                     summary_links.append(message_link)
-            
-            # Задержка между обработками
+
+            # Wait between processing
             await asyncio.sleep(1)
-        
-        # Выводим итоговую статистику
+
+        # Output final statistics
         final_embed = discord.Embed(
             title="📊 Mass Distribution Complete",
             description=f"Successfully processed **{total_processed}/{len(pending_events)}** events",
@@ -896,24 +906,28 @@ async def send_all_op_command(interaction: discord.Interaction):
                 inline=False
             )
         await initial_message.reply(embed=final_embed)
-        
+
     except Exception as e:
         logger.error(f"Error in send_all_op_command: {e}")
         await interaction.followup.send(f"❌ An error occurred while processing mass OP distribution: {str(e)}", ephemeral=True)
 
-@client.tree.command(name="history", description="Show OP history for a user")
+@client.tree.command(name="history", description="Show OP history for a user", guild=discord.Object(id=SAHARA_GUILD_ID))
 @app_commands.describe(user="User to check history for")
 async def history_command(interaction: discord.Interaction, user: discord.Member):
+    if interaction.guild_id != SAHARA_GUILD_ID:
+        await interaction.response.send_message("This command can only be used in the authorized server.", ephemeral=True)
+        return
+
     try:
         await interaction.response.defer(ephemeral=True)
-        
+
         # Get base URL and headers
         base_url = os.getenv('SAHARA_API_URL')
         headers = {
             'Accept': 'application/json',
             'x-api-key': os.getenv('ENGAGE_API_TOKEN')
         }
-        
+
         async with aiohttp.ClientSession() as session:
             # Fetch user's history
             url = f"{base_url}/api/bot/history/{user.id}"
@@ -925,20 +939,20 @@ async def history_command(interaction: discord.Interaction, user: discord.Member
                     print(f"Error response: {error_text}")  # Debug log
                     await interaction.followup.send(f"❌ Failed to fetch history for {user.mention}")
                     return
-                
+
                 history = await response.json()
                 print(f"Received history: {history}")  # Debug log
-                
+
                 if not history or not history.get('events'):
                     await interaction.followup.send(f"📊 No OP history found for {user.mention}")
                     return
-                
+
                 # Create embed for history
                 embed = discord.Embed(
                     title=f"📊 OP History for {user.display_name}",
                     color=discord.Color.blue()
                 )
-                
+
                 # Add total stats
                 total_op = sum(event['amount'] for event in history['events'])
                 embed.add_field(
@@ -946,7 +960,7 @@ async def history_command(interaction: discord.Interaction, user: discord.Member
                     value=f"```{total_op:,} OP```",
                     inline=False
                 )
-                
+
                 # Add recent events (last 5)
                 recent_events = history['events'][:5]
                 if recent_events:
@@ -959,7 +973,7 @@ async def history_command(interaction: discord.Interaction, user: discord.Member
                         value=f"```{recent_history}```",
                         inline=False
                     )
-                
+
                 # Add average stats
                 avg_op = total_op / len(history['events'])
                 embed.add_field(
@@ -967,15 +981,15 @@ async def history_command(interaction: discord.Interaction, user: discord.Member
                     value=f"```{int(avg_op):,} OP```",
                     inline=True
                 )
-                
+
                 embed.add_field(
                     name="Total Events",
                     value=f"```{len(history['events'])}```",
                     inline=True
                 )
-                
+
                 await interaction.followup.send(embed=embed)
-                
+
     except Exception as e:
         print(f"Error in history command: {e}")
         await interaction.followup.send("❌ An error occurred while fetching history")
@@ -1010,13 +1024,13 @@ class WhitelistCommands(app_commands.Group):
     async def add(self, interaction: discord.Interaction, user: discord.Member):
         if not await self.check_authorized(interaction):
             return
-            
+
         try:
             await interaction.response.defer(ephemeral=True)
-            
+
             url = f"{self.get_base_url()}/whitelist/{user.id}/{os.getenv('WHITELIST_SECRET')}"
             headers = self.get_headers()
-            
+
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, headers=headers) as response:
                     if response.status == 200:
@@ -1036,13 +1050,13 @@ class WhitelistCommands(app_commands.Group):
     async def remove(self, interaction: discord.Interaction, user: discord.Member):
         if not await self.check_authorized(interaction):
             return
-            
+
         try:
             await interaction.response.defer(ephemeral=True)
-            
+
             url = f"{self.get_base_url()}/whitelist/{user.id}/{os.getenv('WHITELIST_SECRET')}"
             headers = self.get_headers()
-            
+
             async with aiohttp.ClientSession() as session:
                 async with session.delete(url, headers=headers) as response:
                     if response.status == 200:
@@ -1061,19 +1075,19 @@ class WhitelistCommands(app_commands.Group):
     async def list(self, interaction: discord.Interaction):
         if not await self.check_authorized(interaction):
             return
-            
+
         try:
             await interaction.response.defer(ephemeral=True)
-            
+
             url = f"{self.get_base_url()}/whitelist-list/{os.getenv('WHITELIST_SECRET')}"
             headers = self.get_headers()
-            
+
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, headers=headers) as response:
                     if response.status == 200:
                         data = await response.json()
                         if data.get('users'):
-                            # Создаем список пользователей с их упоминаниями
+                            # Create list of users with their mentions
                             user_list = []
                             for user_id in data['users']:
                                 member = interaction.guild.get_member(int(user_id))
@@ -1081,23 +1095,23 @@ class WhitelistCommands(app_commands.Group):
                                     user_list.append(f"{member.mention} ({member.name})")
                                 else:
                                     user_list.append(f"ID: {user_id} (not in server)")
-                            
-                            # Создаем embed для красивого отображения
+
+                            # Create embed for nice display
                             embed = discord.Embed(
                                 title="Whitelist Users",
                                 description=f"Total users: {len(data['users'])}",
                                 color=discord.Color.blue()
                             )
-                            
-                            # Разбиваем список на части, если он слишком длинный
+
+                            # Split list into chunks if it's too long
                             chunks = [user_list[i:i + 10] for i in range(0, len(user_list), 10)]
                             for i, chunk in enumerate(chunks, 1):
                                 embed.add_field(
-                                    name=f"Users {(i-1)*10 + 1}-{min(i*10, len(user_list))}",
+                                    name=f"Users",
                                     value="\n".join(chunk) or "No users",
                                     inline=False
                                 )
-                            
+
                             await interaction.followup.send(embed=embed)
                         else:
                             await interaction.followup.send("No users in whitelist")
