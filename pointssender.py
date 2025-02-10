@@ -950,7 +950,15 @@ async def history_command(interaction: discord.Interaction, user: discord.Member
                         
                     for dist in event['distributions']:
                         name_list = dist['nameList'].split('\n')
-                        if user.name in name_list or user.global_name in name_list:
+                        # Clean up usernames for comparison
+                        clean_names = [name.strip().replace('@', '') for name in name_list]
+                        user_clean_name = user.name.replace('@', '')
+                        user_global_clean_name = user.global_name.replace('@', '') if user.global_name else ''
+                        
+                        if (user_clean_name in clean_names or 
+                            user_global_clean_name in clean_names or 
+                            user.name in name_list or 
+                            (user.global_name and user.global_name in name_list)):
                             user_history.append({
                                 'event_id': event['id'],
                                 'date': event['eventDate'],
@@ -960,6 +968,8 @@ async def history_command(interaction: discord.Interaction, user: discord.Member
                             total_op += dist['xpAmount']
 
                 if not user_history:
+                    # Log the debug information
+                    logger.info(f"No history found for user: {user.name} (global: {user.global_name})")
                     await interaction.followup.send(f"No OP history found for {user.mention}.", ephemeral=True)
                     return
 
