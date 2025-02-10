@@ -250,7 +250,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 // Добавляем новый фильтр для статуса
                                 $.fn.dataTable.ext.search.push(
                                     function statusFilter(settings, data, dataIndex) {
-                                        const status = $(data[5]).text(); // Получаем текст из HTML статуса
+                                        // Получаем текст статуса из ячейки, удаляя HTML теги
+                                        const statusCell = $(data[5]);
+                                        const status = statusCell.find('.status-badge').text();
                                         return selectedStatus === '' || status === selectedStatus;
                                     }
                                 );
