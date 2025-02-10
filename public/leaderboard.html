@@ -6,8 +6,9 @@
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poly+Sans+Neutral+Wide&display=swap" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css">
     <style>
         body {
             background-color: #3b5252;
@@ -170,10 +171,60 @@
             color: #cd7f32;
         }
     </style>
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 </head>
 <body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="/" class="home-link">Home Page</a>
+        </div>
+        <div class="nav-items">
+            <a href="/create" class="create-event-btn">Create Event</a>
+            <a href="/leaderboard" class="create-event-btn">Leaderboard</a>
+            <div class="user-profile">
+                <img src="" alt="User Avatar" class="user-avatar" id="userAvatar" loading="lazy">
+                <span class="username" id="globalName"></span>
+                <div class="logout-dropdown">
+                    <a href="/auth/logout" class="logout-btn">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                        </svg>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="header">
+            <div class="page-title">Sahara AI - Leaderboard</div>
+        </div>
+
+        <div id="globalStats" class="global-stats">
+            <!-- Global statistics will be inserted here by JavaScript -->
+        </div>
+
+        <div class="table-container table-loading">
+            <table id="leaderboardTable" class="display">
+                <caption style="text-align: center; font-size: 1.5em; padding: 0.5em 0;">Leaderboard Rankings</caption>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>User</th>
+                        <th>Total OP</th>
+                        <th>Avg OP/Event</th>
+                        <th>Highest OP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table data will be inserted here by DataTables -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
         (function() {
             function setNavbar() {
@@ -207,54 +258,6 @@
             }
         })();
     </script>
-
-    <nav class="navbar">
-        <div class="nav-brand">
-            <a href="/" class="home-link">Home Page</a>
-        </div>
-        <div class="nav-items">
-            <a href="/create" class="create-event-btn">Create Event</a>
-            <a href="/leaderboard" class="create-event-btn">Leaderboard</a>
-            <div class="user-profile">
-                <img src="" alt="User Avatar" class="user-avatar" id="userAvatar" loading="lazy">
-                <span class="username" id="globalName"></span>
-                <div class="logout-dropdown">
-                    <a href="/auth/logout" class="logout-btn">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-                        </svg>
-                        Logout
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <div class="main-container">
-        <div class="header">
-            <h1>Leaderboard</h1>
-        </div>
-        <div id="globalStats" class="global-stats">
-            <!-- Global statistics will be inserted here by JavaScript -->
-        </div>
-        <div class="table-container">
-            <table id="leaderboardTable" class="display" style="width:100%">
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>User</th>
-                        <th>Total OP</th>
-                        <th>Avg OP/Event</th>
-                        <th>Highest OP</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Table data will be inserted here by DataTables -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
     <script src="/js/leaderboard.js"></script>
 </body>
 </html> 

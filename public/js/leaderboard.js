@@ -28,10 +28,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Error loading leaderboard data. Please try refreshing the page.');
             }
         },
-        dom: '<"top"lf>rt<"bottom"ip><"clear">',
         processing: true,
         serverSide: false,
         responsive: true,
+        dom: 'rt<"bottom"ilp><"clear">',
         columns: [
             { 
                 data: 'rank',
@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
         order: [[0, 'asc']],
         pageLength: 25,
         language: {
+            processing: '<div class="loading-spinner"></div>',
             search: "Search users:",
             lengthMenu: "Show _MENU_ users per page",
             info: "Showing _START_ to _END_ of _TOTAL_ users",
@@ -78,12 +79,23 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         drawCallback: function() {
             console.log('Table draw complete');
-            $('.dataTables_wrapper').show();
+            $('.table-loading').removeClass('table-loading');
         },
-        initComplete: function() {
+        initComplete: function(settings, json) {
             console.log('Table initialization complete');
-            // Force a redraw after initialization
             this.api().draw(false);
+            
+            // Add search functionality to each column
+            this.api().columns().every(function() {
+                const column = this;
+                const header = $(column.header());
+                
+                header.off('click').on('click', function(e) {
+                    if (!$(e.target).is('input')) {
+                        column.order.flip().draw();
+                    }
+                });
+            });
         }
     });
 
