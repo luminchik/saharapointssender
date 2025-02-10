@@ -5,35 +5,22 @@ document.addEventListener('DOMContentLoaded', function() {
             url: '/api/leaderboard',
             dataSrc: function(json) {
                 console.log('Raw server response:', json);
-                if (!json) {
-                    console.error('No data received from server');
-                    return [];
-                }
-                if (!json.leaderboard) {
-                    console.error('Invalid data format received:', json);
-                    return [];
-                }
-                if (json.error) {
-                    console.error('Server returned error:', json.error);
-                    return [];
-                }
-                console.log('Processing leaderboard data:', json.leaderboard);
                 
-                // Обновляем глобальную статистику сразу при получении данных
-                if (json.globalStats) {
+                // Проверяем наличие данных и обновляем глобальную статистику
+                if (json && json.globalStats) {
+                    console.log('Global stats found:', json.globalStats);
                     updateGlobalStats(json.globalStats);
-                }
-                
-                return json.leaderboard;
-            },
-            error: function(xhr, error, thrown) {
-                console.error('Error loading leaderboard data:', error);
-                console.error('Server response:', xhr.responseText);
-                if (xhr.status === 401) {
-                    window.location.href = '/login';
                 } else {
-                    $('#leaderboardTable tbody').html('<tr><td colspan="5" style="color: red;">Error loading data. Please try again later.</td></tr>');
+                    console.warn('No global stats in response');
                 }
+
+                // Проверяем и возвращаем данные лидерборда
+                if (!json || !json.leaderboard) {
+                    console.error('Invalid data format or no leaderboard data:', json);
+                    return [];
+                }
+
+                return json.leaderboard;
             }
         },
         processing: true,
@@ -87,25 +74,22 @@ document.addEventListener('DOMContentLoaded', function() {
             loadingRecords: 'Loading data...',
             zeroRecords: 'No users found',
             emptyTable: 'No data available'
-        },
-        drawCallback: function(settings) {
-            try {
-                const api = this.api();
-                const response = api.ajax.json();
-                if (response && response.globalStats) {
-                    updateGlobalStats(response.globalStats);
-                } else {
-                    console.log('No global stats available in response');
-                }
-            } catch (error) {
-                console.error('Error updating global stats:', error);
-            }
         }
     });
 
     // Update global statistics
     function updateGlobalStats(stats) {
-        if (!stats) return;
+        console.log('Updating global stats:', stats);
+        if (!stats) {
+            console.warn('No stats provided to updateGlobalStats');
+            return;
+        }
+
+        const statsContainer = document.getElementById('globalStats');
+        if (!statsContainer) {
+            console.error('Global stats container not found');
+            return;
+        }
 
         const statsHtml = `
             <div class="stat-item">
@@ -126,10 +110,8 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        const statsContainer = document.getElementById('globalStats');
-        if (statsContainer) {
-            statsContainer.innerHTML = statsHtml;
-        }
+        statsContainer.innerHTML = statsHtml;
+        console.log('Global stats updated successfully');
     }
 
     // Load user data for navbar
@@ -148,7 +130,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('userAvatar').src = avatarUrl;
             document.getElementById('globalName').textContent = user.global_name || user.username;
             
-            // Store user data in localStorage
             localStorage.setItem('userData', JSON.stringify(user));
         })
         .catch(error => {
