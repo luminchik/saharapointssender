@@ -920,7 +920,7 @@ async def history_command(interaction: discord.Interaction, user: discord.Member
         return
 
     try:
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=True)
 
         async with aiohttp.ClientSession() as session:
             url = f"{SAHARA_API_URL}/api/bot/events"
@@ -965,7 +965,7 @@ async def history_command(interaction: discord.Interaction, user: discord.Member
 
                 # Create embed for history
                 embed = discord.Embed(
-                    title=f"OP History for {user.display_name}",
+                    title=f"OP History for {user.mention}",
                     color=discord.Color.blue()
                 )
                 
@@ -994,7 +994,7 @@ async def history_command(interaction: discord.Interaction, user: discord.Member
                         inline=False
                     )
 
-                await interaction.followup.send(embed=embed)
+                await interaction.followup.send(embed=embed, ephemeral=True)
 
     except Exception as e:
         logger.error(f"Error in history command: {e}")
