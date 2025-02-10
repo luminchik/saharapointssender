@@ -179,6 +179,7 @@ router.put('/events/:id', async (req, res) => {
 
 // Получение лидерборда
 router.get('/leaderboard', async (req, res) => {
+    console.log('Fetching leaderboard data...');
     try {
         // Получаем все записи распределений вместе с информацией о событиях
         const distributions = await Distribution.findAll({
@@ -193,28 +194,39 @@ router.get('/leaderboard', async (req, res) => {
             attributes: ['xpAmount', 'nameList']
         });
 
+        console.log(`Found ${distributions.length} completed distributions`);
+
         // Агрегируем данные в объект leaderboard
         const leaderboard = {};
+        let totalProcessedNames = 0;
         
         distributions.forEach(dist => {
-            const xp = dist.xpAmount;
-            if (dist.nameList) {
-                const names = dist.nameList.split(/\r?\n/).map(n => n.trim()).filter(n => n);
-                names.forEach(name => {
-                    if (!leaderboard[name]) {
-                        leaderboard[name] = {
-                            totalOp: 0,
-                            eventsParticipated: 0,
-                            highestOp: 0
-                        };
-                    }
-                    
-                    leaderboard[name].totalOp += xp;
-                    leaderboard[name].eventsParticipated += 1;
-                    leaderboard[name].highestOp = Math.max(leaderboard[name].highestOp, xp);
-                });
+            if (!dist.nameList) {
+                console.log('Found distribution with empty nameList, skipping...');
+                return;
             }
+
+            const xp = dist.xpAmount;
+            const names = dist.nameList.split(/\r?\n/).map(n => n.trim()).filter(n => n);
+            totalProcessedNames += names.length;
+
+            names.forEach(name => {
+                if (!leaderboard[name]) {
+                    leaderboard[name] = {
+                        totalOp: 0,
+                        eventsParticipated: 0,
+                        highestOp: 0
+                    };
+                }
+                
+                leaderboard[name].totalOp += xp;
+                leaderboard[name].eventsParticipated += 1;
+                leaderboard[name].highestOp = Math.max(leaderboard[name].highestOp, xp);
+            });
         });
+
+        console.log(`Processed ${totalProcessedNames} total names`);
+        console.log(`Generated leaderboard for ${Object.keys(leaderboard).length} unique users`);
 
         // Преобразуем объект leaderboard в массив
         let leaderboardArray = Object.entries(leaderboard).map(([username, stats]) => ({
@@ -241,6 +253,9 @@ router.get('/leaderboard', async (req, res) => {
             mostActiveUser: leaderboardArray[0]?.username || 'N/A'
         };
 
+        console.log('Leaderboard data prepared successfully');
+        console.log('Global stats:', globalStats);
+
         res.json({
             leaderboard: leaderboardArray,
             globalStats
@@ -249,7 +264,14 @@ router.get('/leaderboard', async (req, res) => {
         console.error('Leaderboard error:', error);
         res.status(500).json({ 
             error: 'Failed to fetch leaderboard data',
-            details: error.message
+            details: error.message,
+            leaderboard: [],
+            globalStats: {
+                totalUsers: 0,
+                totalOpDistributed: 0,
+                averageOpPerUser: 0,
+                mostActiveUser: 'N/A'
+            }
         });
     }
 });

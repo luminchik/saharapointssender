@@ -4,14 +4,24 @@ document.addEventListener('DOMContentLoaded', function() {
         ajax: {
             url: '/api/protected/leaderboard',
             dataSrc: function(json) {
-                if (!json || !json.leaderboard) {
+                if (!json) {
+                    console.error('No data received from server');
+                    return [];
+                }
+                if (!json.leaderboard) {
                     console.error('Invalid data format received:', json);
                     return [];
                 }
+                if (json.error) {
+                    console.error('Server returned error:', json.error);
+                    return [];
+                }
+                console.log('Received leaderboard data:', json.leaderboard.length, 'entries');
                 return json.leaderboard;
             },
             error: function(xhr, error, thrown) {
                 console.error('Error loading leaderboard data:', error);
+                console.error('Server response:', xhr.responseText);
                 if (xhr.status === 401) {
                     window.location.href = '/login';
                 } else {

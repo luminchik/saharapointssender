@@ -915,100 +915,108 @@ async def send_all_op_command(interaction: discord.Interaction):
 @app_commands.describe(user="User to check history for")
 async def history_command(interaction: discord.Interaction, user: discord.Member):
     """Command to show OP history for a user."""
-    if interaction.guild_id != SAHARA_GUILD_ID:
-        await interaction.response.send_message("This command can only be used in the authorized server.", ephemeral=True)
-        return
-
     try:
         await interaction.response.defer(ephemeral=True)
-
+        
         async with aiohttp.ClientSession() as session:
-            url = f"{SAHARA_API_URL}/api/bot/events"
+            # Используем правильный endpoint и заголовки
+            base_url = SAHARA_API_URL.rstrip('/')
+            url = f"{base_url}/api/bot/events"
             headers = {
+                'Content-Type': 'application/json',
                 'x-api-key': ENGAGE_API_TOKEN,
-                'Content-Type': 'application/json'
+                'Accept': 'application/json'
             }
             
             async with session.get(url, headers=headers) as response:
-                if response.status != 200:
-                    logger.error(f"Error fetching events: {response.status}")
-                    await interaction.followup.send("Failed to fetch user history.", ephemeral=True)
+                if response.status == 401:
+                    await interaction.followup.send("❌ Unauthorized access. Please check API configuration.", ephemeral=True)
+                    return
+                    
+                if not response.ok:
+                    await interaction.followup.send(f"❌ Failed to fetch events: {response.status}", ephemeral=True)
                     return
                 
                 data = await response.json()
                 if not data or 'data' not in data:
-                    await interaction.followup.send("No event data found.", ephemeral=True)
+                    await interaction.followup.send("❌ No events data found", ephemeral=True)
                     return
 
                 events = data['data']
-                user_history = []
+                
+                # Фильтруем завершенные события
+                completed_events = [event for event in events if event['status'] == 'Completed']
+                
+                # Ищем пользователя в списках распределения
+                user_events = []
                 total_op = 0
-
-                for event in events:
-                    if event['status'] != 'Completed':
-                        continue
-                        
+                
+                for event in completed_events:
                     for dist in event['distributions']:
-                        name_list = dist['nameList'].split('\n')
-                        # Clean up usernames for comparison
-                        clean_names = [name.strip().replace('@', '') for name in name_list]
-                        user_clean_name = user.name.replace('@', '')
-                        user_global_clean_name = user.global_name.replace('@', '') if user.global_name else ''
+                        names = [name.strip() for name in dist['nameList'].split('\n')]
+                        # Проверяем все варианты имени пользователя
+                        user_name = user.name.strip()
+                        user_global_name = user.global_name.strip() if user.global_name else None
+                        user_mention = user.mention.strip()
+                        user_display_name = user.display_name.strip()
                         
-                        if (user_clean_name in clean_names or 
-                            user_global_clean_name in clean_names or 
-                            user.name in name_list or 
-                            (user.global_name and user.global_name in name_list)):
-                            user_history.append({
-                                'event_id': event['id'],
-                                'date': event['eventDate'],
+                        # Создаем список всех возможных имен пользователя
+                        possible_names = [name for name in [user_name, user_global_name, user_mention, user_display_name] if name]
+                        
+                        # Проверяем, есть ли хотя бы одно из имен пользователя в списке
+                        if any(name in names for name in possible_names):
+                            op_amount = dist['xpAmount']
+                            total_op += op_amount
+                            user_events.append({
                                 'title': event['title'],
-                                'amount': dist['xpAmount']
+                                'op': op_amount
                             })
-                            total_op += dist['xpAmount']
 
-                if not user_history:
-                    # Log the debug information
-                    logger.info(f"No history found for user: {user.name} (global: {user.global_name})")
-                    await interaction.followup.send(f"No OP history found for {user.mention}.", ephemeral=True)
+                if not user_events:
+                    await interaction.followup.send(f"❌ No OP history found for {user.mention}", ephemeral=True)
                     return
 
-                # Create embed for history
+                # Создаем embed с историей
                 embed = discord.Embed(
-                    title=f"OP History for {user.mention}",
+                    title=f"📊 OP History for {user.display_name}",
                     color=discord.Color.blue()
                 )
                 
-                # Add total OP field
+                # Добавляем аватар пользователя
+                avatar_url = user.display_avatar.url if user.display_avatar else user.default_avatar.url
+                embed.set_thumbnail(url=avatar_url)
+                
                 embed.add_field(
                     name="Total OP Earned",
-                    value=f"**{total_op:,}** OP",
+                    value=f"`{total_op} OP`",
                     inline=False
                 )
 
-                # Sort history by date (newest first)
-                user_history.sort(key=lambda x: x['date'], reverse=True)
-
-                # Add last 5 events
-                recent_events = user_history[:5]
-                if recent_events:
-                    history_text = ""
-                    for entry in recent_events:
-                        date = datetime.fromisoformat(entry['date'].replace('Z', '+00:00'))
-                        formatted_date = date.strftime("%Y-%m-%d")
-                        history_text += f"• {formatted_date}: **{entry['amount']:,}** OP - {entry['title']}\n"
-                    
-                    embed.add_field(
-                        name="Recent Events",
-                        value=history_text,
-                        inline=False
-                    )
+                # Добавляем маленький отступ
+                embed.add_field(
+                    name="⠀",
+                    value="⠀",
+                    inline=False
+                )
+                
+                # Добавляем последние события (максимум 10)
+                recent_events = sorted(user_events, key=lambda x: x['op'], reverse=True)[:10]
+                recent_events_text = "\n".join([
+                    f"✅ **{event['title']}** ➜ `{event['op']} OP`"
+                    for event in recent_events
+                ])
+                
+                embed.add_field(
+                    name="🎮 Recent Events",
+                    value=recent_events_text or "No recent events",
+                    inline=False
+                )
 
                 await interaction.followup.send(embed=embed, ephemeral=True)
 
     except Exception as e:
-        logger.error(f"Error in history command: {e}")
-        await interaction.followup.send(f"An error occurred while fetching history.", ephemeral=True)
+        logger.error(f"Error in history command: {str(e)}")
+        await interaction.followup.send(f"❌ An error occurred: {str(e)}", ephemeral=True)
 
 class WhitelistCommands(app_commands.Group):
     def __init__(self):
