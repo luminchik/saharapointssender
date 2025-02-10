@@ -6,20 +6,24 @@
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poly+Sans+Neutral+Wide&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="/css/styles.css">
     <style>
         body {
             background-color: #3b5252;
             color: #fff;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
         }
 
         .main-container {
             padding: 20px;
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 20px auto;
             background-color: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .header h1 {
@@ -37,7 +41,6 @@
             padding: 20px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
-            backdrop-filter: blur(10px);
         }
 
         .stat-item {
@@ -63,30 +66,30 @@
         }
 
         .table-container {
+            margin-top: 20px;
             background: rgba(255, 255, 255, 0.1);
             padding: 20px;
             border-radius: 8px;
-            backdrop-filter: blur(10px);
+            overflow-x: auto;
         }
 
         #leaderboardTable {
             width: 100% !important;
-            background: transparent;
-            border-collapse: separate;
-            border-spacing: 0;
             color: #fff;
+            border-collapse: collapse;
+            margin-top: 10px;
         }
 
         #leaderboardTable thead th {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.2);
             color: #fff;
+            padding: 12px;
             font-weight: 600;
-            padding: 15px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            text-align: left;
         }
 
         #leaderboardTable tbody td {
-            padding: 12px 15px;
+            padding: 10px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
@@ -95,8 +98,7 @@
         }
 
         .rank {
-            font-weight: 600;
-            color: #fff;
+            font-weight: bold;
         }
 
         .username {
@@ -111,15 +113,14 @@
             color: #fff;
         }
 
-        /* DataTables specific styling */
         .dataTables_wrapper {
             color: #fff;
+            padding: 10px 0;
         }
 
         .dataTables_length,
         .dataTables_filter {
-            margin-bottom: 20px;
-            color: #fff;
+            margin-bottom: 15px;
         }
 
         .dataTables_length select,
@@ -129,24 +130,22 @@
             color: #fff;
             padding: 5px 10px;
             border-radius: 4px;
-        }
-
-        .dataTables_filter input {
-            margin-left: 10px;
+            margin: 0 5px;
         }
 
         .dataTables_info,
         .dataTables_paginate {
-            margin-top: 20px;
+            margin-top: 15px;
             color: #fff;
         }
 
         .dataTables_paginate .paginate_button {
+            padding: 5px 10px;
+            margin: 0 2px;
+            border-radius: 4px;
             color: #fff !important;
             background: rgba(255, 255, 255, 0.1) !important;
             border: none !important;
-            border-radius: 4px;
-            margin: 0 2px;
         }
 
         .dataTables_paginate .paginate_button.current {
@@ -159,17 +158,16 @@
             color: #fff !important;
         }
 
-        /* Top 3 ranks styling */
         #leaderboardTable tbody tr:nth-child(1) .rank {
-            color: #ffd700; /* Gold */
+            color: #ffd700;
         }
 
         #leaderboardTable tbody tr:nth-child(2) .rank {
-            color: #c0c0c0; /* Silver */
+            color: #c0c0c0;
         }
 
         #leaderboardTable tbody tr:nth-child(3) .rank {
-            color: #cd7f32; /* Bronze */
+            color: #cd7f32;
         }
     </style>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -237,7 +235,7 @@
             <h1>Leaderboard</h1>
         </div>
         <div id="globalStats" class="global-stats">
-            <!-- Глобальная статистика будет добавлена через JavaScript -->
+            <!-- Global statistics will be inserted here by JavaScript -->
         </div>
         <div class="table-container">
             <table id="leaderboardTable" class="display" style="width:100%">
@@ -251,6 +249,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- Table data will be inserted here by DataTables -->
                 </tbody>
             </table>
         </div>
