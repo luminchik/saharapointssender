@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ajax: {
             url: '/api/leaderboard',
             dataSrc: function(json) {
+                console.log('Raw server response:', json);
                 if (!json) {
                     console.error('No data received from server');
                     return [];
@@ -16,7 +17,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Server returned error:', json.error);
                     return [];
                 }
-                console.log('Received leaderboard data:', json.leaderboard.length, 'entries');
+                console.log('Processing leaderboard data:', json.leaderboard);
+                
+                // Обновляем глобальную статистику сразу при получении данных
+                if (json.globalStats) {
+                    updateGlobalStats(json.globalStats);
+                }
+                
                 return json.leaderboard;
             },
             error: function(xhr, error, thrown) {
@@ -29,6 +36,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         },
+        processing: true,
+        serverSide: false,
         columns: [
             { 
                 data: 'rank',
@@ -68,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ],
         order: [[2, 'desc']],
         pageLength: 25,
+        dom: '<"top"lf>rt<"bottom"ip><"clear">',
         language: {
             search: "Search users:",
             lengthMenu: "Show _MENU_ users per page",

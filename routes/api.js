@@ -165,6 +165,7 @@ router.get('/leaderboard', async (req, res) => {
 
             const xp = dist.xpAmount;
             const names = dist.nameList.split(/\r?\n/).map(n => n.trim()).filter(n => n);
+            console.log(`Processing distribution with ${names.length} names and ${xp} OP`);
             totalProcessedNames += names.length;
 
             names.forEach(name => {
@@ -212,11 +213,14 @@ router.get('/leaderboard', async (req, res) => {
 
         console.log('Leaderboard data prepared successfully');
         console.log('Global stats:', globalStats);
+        console.log('First 5 entries:', leaderboardArray.slice(0, 5));
 
-        res.json({
+        const response = {
             leaderboard: leaderboardArray,
             globalStats
-        });
+        };
+        console.log('Sending response with data length:', leaderboardArray.length);
+        res.json(response);
     } catch (error) {
         console.error('Leaderboard error:', error);
         res.status(500).json({ 
