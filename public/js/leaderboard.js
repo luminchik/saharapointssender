@@ -11,10 +11,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (json && json.globalStats) {
                     console.log('Updating global stats...');
                     updateGlobalStats(json.globalStats);
+                    console.log('Global stats updated successfully');
                 }
 
                 if (!json || !json.leaderboard) {
-                    console.error('No leaderboard data found');
+                    console.error('No leaderboard data found in response');
                     return [];
                 }
 
@@ -24,8 +25,10 @@ document.addEventListener('DOMContentLoaded', function() {
             error: function(xhr, error, thrown) {
                 console.error('Error loading data:', error);
                 console.error('Server response:', xhr.responseText);
+                alert('Error loading leaderboard data. Please try refreshing the page.');
             }
         },
+        dom: '<"top"lf>rt<"bottom"ip><"clear">',
         processing: true,
         serverSide: false,
         responsive: true,
@@ -73,45 +76,51 @@ document.addEventListener('DOMContentLoaded', function() {
             zeroRecords: 'No users found',
             emptyTable: 'No data available'
         },
+        drawCallback: function() {
+            console.log('Table draw complete');
+            $('.dataTables_wrapper').show();
+        },
         initComplete: function() {
             console.log('Table initialization complete');
+            // Force a redraw after initialization
+            this.api().draw(false);
         }
     });
 
     // Update global statistics
     function updateGlobalStats(stats) {
         if (!stats) {
-            console.warn('No stats provided');
+            console.warn('No stats provided for global statistics');
             return;
         }
 
         const statsContainer = document.getElementById('globalStats');
         if (!statsContainer) {
-            console.error('Stats container not found');
+            console.error('Global stats container not found');
             return;
         }
 
         const statsHtml = `
             <div class="stat-item">
-                <span class="stat-label">Total Users:</span>
+                <span class="stat-label">Total Users</span>
                 <span class="stat-value">${stats.totalUsers.toLocaleString()}</span>
             </div>
             <div class="stat-item">
-                <span class="stat-label">Total OP Distributed:</span>
+                <span class="stat-label">Total OP Distributed</span>
                 <span class="stat-value">${stats.totalOpDistributed.toLocaleString()}</span>
             </div>
             <div class="stat-item">
-                <span class="stat-label">Average OP per User:</span>
+                <span class="stat-label">Average OP per User</span>
                 <span class="stat-value">${stats.averageOpPerUser.toLocaleString()}</span>
             </div>
             <div class="stat-item">
-                <span class="stat-label">Most Active User:</span>
+                <span class="stat-label">Most Active User</span>
                 <span class="stat-value">${stats.mostActiveUser || 'N/A'}</span>
             </div>
         `;
         
         statsContainer.innerHTML = statsHtml;
-        console.log('Global stats updated');
+        console.log('Global stats updated successfully');
     }
 
     // Load user data for navbar
