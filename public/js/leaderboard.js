@@ -1,10 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация таблицы лидерборда с использованием DataTables
+    // Initialize DataTable for leaderboard
     const leaderboardTable = $('#leaderboardTable').DataTable({
         ajax: {
-            url: '/api/leaderboard',
+            url: '/api/protected/leaderboard',
             dataSrc: function(json) {
-                console.log('Received data:', json);
                 if (!json || !json.leaderboard) {
                     console.error('Invalid data format received:', json);
                     return [];
@@ -13,12 +12,21 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             error: function(xhr, error, thrown) {
                 console.error('Error loading leaderboard data:', error);
-                console.error('Server response:', xhr.responseText);
-                $('#leaderboardTable tbody').html('<tr><td colspan="5" style="color: red;">Error loading data. Please try again later.</td></tr>');
+                if (xhr.status === 401) {
+                    window.location.href = '/login';
+                } else {
+                    $('#leaderboardTable tbody').html('<tr><td colspan="5" style="color: red;">Error loading data. Please try again later.</td></tr>');
+                }
             }
         },
         columns: [
-            { data: 'rank', title: 'Rank' },
+            { 
+                data: 'rank',
+                title: 'Rank',
+                render: function(data) {
+                    return `<span class="rank">#${data}</span>`;
+                }
+            },
             { 
                 data: 'username',
                 title: 'User',
@@ -51,17 +59,21 @@ document.addEventListener('DOMContentLoaded', function() {
         order: [[2, 'desc']],
         pageLength: 25,
         language: {
+            search: "Search users:",
+            lengthMenu: "Show _MENU_ users per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ users",
+            infoEmpty: "No users found",
+            infoFiltered: "(filtered from _MAX_ total users)",
             loadingRecords: 'Loading data...',
-            zeroRecords: 'No data available',
+            zeroRecords: 'No users found',
             emptyTable: 'No data available'
         },
         drawCallback: function(settings) {
             try {
+                const api = this.api();
                 const globalStats = settings.json.globalStats;
                 if (globalStats) {
                     updateGlobalStats(globalStats);
-                } else {
-                    console.warn('No global stats available:', settings.json);
                 }
             } catch (error) {
                 console.error('Error updating global stats:', error);
@@ -69,31 +81,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Функция обновления глобальной статистики
+    // Update global statistics
     function updateGlobalStats(stats) {
-        if (!stats) {
-            console.warn('No stats provided to updateGlobalStats');
-            return;
-        }
+        if (!stats) return;
 
         const statsHtml = `
-            <div class="global-stats">
-                <div class="stat-item">
-                    <span class="stat-label">Total Users:</span>
-                    <span class="stat-value">${stats.totalUsers.toLocaleString()}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Total OP Distributed:</span>
-                    <span class="stat-value">${stats.totalOpDistributed.toLocaleString()}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Average OP per User:</span>
-                    <span class="stat-value">${stats.averageOpPerUser.toLocaleString()}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Most Active User:</span>
-                    <span class="stat-value">${stats.mostActiveUser || 'N/A'}</span>
-                </div>
+            <div class="stat-item">
+                <span class="stat-label">Total Users:</span>
+                <span class="stat-value">${stats.totalUsers.toLocaleString()}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total OP Distributed:</span>
+                <span class="stat-value">${stats.totalOpDistributed.toLocaleString()}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Average OP per User:</span>
+                <span class="stat-value">${stats.averageOpPerUser.toLocaleString()}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Most Active User:</span>
+                <span class="stat-value">${stats.mostActiveUser || 'N/A'}</span>
             </div>
         `;
         
@@ -103,26 +110,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Загрузка данных пользователя для навбара
+    // Load user data for navbar
     fetch('/api/user')
         .then(response => {
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error('Unauthorized');
             }
             return response.json();
         })
         .then(user => {
-            if (user && user.id && user.avatar) {
-                document.getElementById('userAvatar').src = 
-                    `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
-                document.getElementById('globalName').textContent = 
-                    user.global_name || user.username;
-            } else {
-                console.warn('Incomplete user data received:', user);
-            }
+            const avatarUrl = user.avatar 
+                ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+                : 'https://cdn.discordapp.com/embed/avatars/0.png';
+            
+            document.getElementById('userAvatar').src = avatarUrl;
+            document.getElementById('globalName').textContent = user.global_name || user.username;
+            
+            // Store user data in localStorage
+            localStorage.setItem('userData', JSON.stringify(user));
         })
         .catch(error => {
             console.error('Error loading user data:', error);
-            document.getElementById('globalName').textContent = 'User';
+            if (error.message === 'Unauthorized') {
+                window.location.href = '/login';
+            }
         });
+
+    // Handle user profile dropdown
+    const userProfile = document.querySelector('.user-profile');
+    document.addEventListener('click', (e) => {
+        if (userProfile.contains(e.target)) {
+            userProfile.classList.toggle('active');
+        } else {
+            userProfile.classList.remove('active');
+        }
+    });
 }); 
