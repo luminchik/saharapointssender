@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize DataTable for leaderboard
     const leaderboardTable = $('#leaderboardTable').DataTable({
         ajax: {
-            url: '/api/protected/leaderboard',
+            url: '/api/leaderboard',
             dataSrc: function(json) {
                 if (!json) {
                     console.error('No data received from server');
@@ -81,9 +81,11 @@ document.addEventListener('DOMContentLoaded', function() {
         drawCallback: function(settings) {
             try {
                 const api = this.api();
-                const globalStats = settings.json.globalStats;
-                if (globalStats) {
-                    updateGlobalStats(globalStats);
+                const response = api.ajax.json();
+                if (response && response.globalStats) {
+                    updateGlobalStats(response.globalStats);
+                } else {
+                    console.log('No global stats available in response');
                 }
             } catch (error) {
                 console.error('Error updating global stats:', error);
