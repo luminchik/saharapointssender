@@ -19,18 +19,18 @@ async function initializeDatabase() {
         await sequelize.sync({ force: false, alter: true });
         console.log('Database sync complete!');
 
-        // Проверяем существующие данные
+        // Check existing data
         console.log('\nChecking existing data:');
         
-        // Проверяем таблицу Whitelist
+        // Check the Whitelist table
         const whitelistCount = await models.Whitelist.count();
         console.log('Whitelist entries:', whitelistCount);
         
-        // Проверяем таблицу Events
+        // Check the Events table
         const eventCount = await models.Event.count();
         console.log('Event entries:', eventCount);
         
-        // Проверяем таблицу Distributions
+        // Check the Distributions table
         const distributionCount = await models.Distribution.count();
         console.log('Distribution entries:', distributionCount);
 
@@ -74,7 +74,7 @@ async function initializeDatabase() {
             console.error('Database write test failed:', error);
         }
 
-        // Проверяем, что все таблицы существуют
+        // Check that all tables exist
         const tables = await sequelize.getQueryInterface().showAllTables();
         console.log('\nExisting tables in database:', tables);
 
