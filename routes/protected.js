@@ -15,7 +15,7 @@ router.get('/events', async (req, res) => {
             order: [['eventDate', 'DESC']]
         });
 
-        // Форматируем данные для DataTables
+        // Format data for DataTables
         const formattedEvents = events.map(event => ({
             id: event.id,
             eventDate: event.eventDate,
@@ -45,7 +45,7 @@ router.get('/events', async (req, res) => {
     }
 });
 
-// Создание нового события
+// Create new event
 router.post('/events', async (req, res) => {
     try {
         const { eventDate, eventTitle, requestor, region, distributions } = req.body;
@@ -69,7 +69,7 @@ router.post('/events', async (req, res) => {
             ));
         }
 
-        // Улучшенное логирование
+        // Enhanced logging
         console.log('Attempting to log event creation...');
         await Logger.log({
             action: 'CREATE_EVENT',
@@ -92,7 +92,7 @@ router.post('/events', async (req, res) => {
     }
 });
 
-// Получение одного события
+// Get single event
 router.get('/events/:id', async (req, res) => {
     try {
         const event = await Event.findByPk(req.params.id, {
@@ -113,7 +113,7 @@ router.get('/events/:id', async (req, res) => {
     }
 });
 
-// Обновление события
+// Update event
 router.put('/events/:id', async (req, res) => {
     try {
         const event = await Event.findByPk(req.params.id);
@@ -131,7 +131,7 @@ router.put('/events/:id', async (req, res) => {
             region: req.body.region || 'Global'
         });
 
-        // Обновляем распределения
+        // Update distributions
         await Distribution.destroy({ where: { eventId: event.id } });
         
         if (req.body.distributions && req.body.distributions.length > 0) {
@@ -145,7 +145,7 @@ router.put('/events/:id', async (req, res) => {
             ));
         }
 
-        // Улучшенное логирование
+        // Enhanced logging
         console.log('Attempting to log event update...');
         await Logger.log({
             action: 'EDIT_EVENT',
@@ -177,18 +177,18 @@ router.put('/events/:id', async (req, res) => {
     }
 });
 
-// Получение лидерборда
+// Get leaderboard data
 router.get('/leaderboard', async (req, res) => {
     console.log('Fetching leaderboard data...');
     try {
-        // Получаем все записи распределений вместе с информацией о событиях
+        // Get all distribution records with event information
         const distributions = await Distribution.findAll({
             include: [{
                 model: Event,
                 as: 'event',
                 attributes: ['title', 'eventDate', 'requestor', 'status'],
                 where: {
-                    status: 'Completed' // Учитываем только завершенные события
+                    status: 'Completed' // Only count completed events
                 }
             }],
             attributes: ['xpAmount', 'nameList']
@@ -196,7 +196,7 @@ router.get('/leaderboard', async (req, res) => {
 
         console.log(`Found ${distributions.length} completed distributions`);
 
-        // Агрегируем данные в объект leaderboard
+        // Aggregate data into leaderboard object
         const leaderboard = {};
         let totalProcessedNames = 0;
         
@@ -228,7 +228,7 @@ router.get('/leaderboard', async (req, res) => {
         console.log(`Processed ${totalProcessedNames} total names`);
         console.log(`Generated leaderboard for ${Object.keys(leaderboard).length} unique users`);
 
-        // Преобразуем объект leaderboard в массив
+        // Convert leaderboard object to array
         let leaderboardArray = Object.entries(leaderboard).map(([username, stats]) => ({
             username,
             totalOp: stats.totalOp,
@@ -236,16 +236,16 @@ router.get('/leaderboard', async (req, res) => {
             averageOp: Math.round(stats.totalOp / stats.eventsParticipated)
         }));
 
-        // Сортируем по общему количеству OP
+        // Sort by total OP
         leaderboardArray.sort((a, b) => b.totalOp - a.totalOp);
         
-        // Добавляем ранги
+        // Add ranks
         leaderboardArray = leaderboardArray.map((entry, index) => ({ 
             rank: index + 1,
             ...entry
         }));
 
-        // Добавляем общую статистику
+        // Add global statistics
         const globalStats = {
             totalUsers: leaderboardArray.length,
             totalOpDistributed: leaderboardArray.reduce((sum, user) => sum + user.totalOp, 0),
