@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Whitelist } = require('../models');
 
-// Middleware для проверки секретного ключа
+// Middleware to check secret key
 const checkWhitelistSecret = (req, res, next) => {
     try {
         const { secret } = req.params;
@@ -14,7 +14,7 @@ const checkWhitelistSecret = (req, res, next) => {
             });
         }
 
-        // Декодируем секретный ключ из URL
+        // Decode secret key from URL
         const decodedSecret = decodeURIComponent(secret);
         console.log('Checking whitelist secret...');
         
@@ -37,7 +37,7 @@ const checkWhitelistSecret = (req, res, next) => {
     }
 };
 
-// Добавление пользователя в вайтлист
+// Add user to whitelist
 router.get('/whitelist/:userId/:secret', checkWhitelistSecret, async (req, res) => {
     console.log('Processing whitelist addition request...');
     try {
@@ -63,7 +63,7 @@ router.get('/whitelist/:userId/:secret', checkWhitelistSecret, async (req, res) 
             }
         });
 
-        // Если пользователь уже существует, обновляем его данные
+        // If user already exists, update their data
         if (!created && req.body.username) {
             await whitelist.update({
                 username: req.body.username,
@@ -96,7 +96,7 @@ router.get('/whitelist/:userId/:secret', checkWhitelistSecret, async (req, res) 
     }
 });
 
-// Удаление пользователя из вайтлиста
+// Remove user from whitelist
 router.delete('/whitelist/:userId/:secret', checkWhitelistSecret, async (req, res) => {
     try {
         const { userId } = req.params;
@@ -111,7 +111,7 @@ router.delete('/whitelist/:userId/:secret', checkWhitelistSecret, async (req, re
     }
 });
 
-// Проверка пользователя в вайтлисте
+// Check if user is in whitelist
 router.get('/whitelist-check/:userId/:secret', checkWhitelistSecret, async (req, res) => {
     try {
         const { userId } = req.params;
@@ -126,7 +126,7 @@ router.get('/whitelist-check/:userId/:secret', checkWhitelistSecret, async (req,
     }
 });
 
-// Получение списка пользователей в вайтлисте
+// Get list of whitelisted users
 router.get('/whitelist-list/:secret', checkWhitelistSecret, async (req, res) => {
     try {
         const users = await Whitelist.findAll();
