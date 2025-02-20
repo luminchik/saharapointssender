@@ -3,7 +3,7 @@ const router = express.Router();
 const { Event, Distribution, Log } = require('../models');
 const Logger = require('../utils/logger');
 
-// Middleware для проверки API ключа бота
+// Middleware to check bot's API key
 const checkApiKey = (req, res, next) => {
     const apiKey = req.headers['x-api-key'];
     console.log('Checking API key:', apiKey ? 'Present' : 'Missing');
@@ -43,6 +43,7 @@ router.get('/events/:id', checkApiKey, async (req, res) => {
     }
 });
 
+// Update event status
 router.put('/events/:id', checkApiKey, async (req, res) => {
     console.log('\n=== Status Update Request ===');
     console.log('Received status update request for event:', req.params.id);
@@ -98,7 +99,7 @@ router.put('/events/:id', checkApiKey, async (req, res) => {
     }
 });
 
-// Эндпоинт для логирования от бота
+// Bot logging endpoint
 router.post('/log', checkApiKey, async (req, res) => {
     try {
         const { action, userId, username, details } = req.body;
@@ -117,7 +118,7 @@ router.post('/log', checkApiKey, async (req, res) => {
     }
 });
 
-// New route to list all events for bot commands
+// List all events for bot commands
 router.get('/events', checkApiKey, async (req, res) => {
     try {
         const events = await Event.findAll({
