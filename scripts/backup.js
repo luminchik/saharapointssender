@@ -3,25 +3,25 @@ const path = require('path');
 const { exec } = require('child_process');
 require('dotenv').config();
 
-// Создаем директорию для бэкапов, если она не существует
+// Create backup directory if it doesn't exist
 const backupDir = path.join(__dirname, '..', 'backups');
 if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
 }
 
-// Функция для создания бэкапа
+// Function to create backup
 async function createBackup() {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupPath = path.join(backupDir, `backup-${timestamp}.sqlite3`);
     
-    // Путь к основной базе данных
+    // Path to main database
     const dbPath = path.join(__dirname, '..', 'database.sqlite3');
 
     try {
-        // Создаем копию базы данных
+        // Create database copy
         fs.copyFileSync(dbPath, backupPath);
         
-        // Сжимаем бэкап
+        // Compress backup
         exec(`gzip "${backupPath}"`, (error) => {
             if (error) {
                 console.error('Error compressing backup:', error);
@@ -29,7 +29,7 @@ async function createBackup() {
             }
             console.log(`Backup created successfully: ${backupPath}.gz`);
             
-            // Удаляем старые бэкапы (оставляем только последние 7)
+            // Remove old backups (keep only last 7)
             cleanOldBackups();
         });
     } catch (error) {
@@ -37,7 +37,7 @@ async function createBackup() {
     }
 }
 
-// Функция для удаления старых бэкапов
+// Function to remove old backups
 function cleanOldBackups() {
     const files = fs.readdirSync(backupDir)
         .filter(file => file.endsWith('.gz'))
@@ -48,7 +48,7 @@ function cleanOldBackups() {
         }))
         .sort((a, b) => b.time - a.time);
 
-    // Оставляем только последние 7 бэкапов
+    // Keep only last 7 backups
     const filesToDelete = files.slice(7);
     filesToDelete.forEach(file => {
         try {
@@ -60,5 +60,5 @@ function cleanOldBackups() {
     });
 }
 
-// Запускаем бэкап
+// Start backup
 createBackup(); 
