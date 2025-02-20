@@ -1,11 +1,23 @@
+const { Event } = require('../models');
 const { logActivity } = require('./logController');
 
-// В функции createEvent добавляем логирование
+// Create event with logging
 const createEvent = async (req, res) => {
     try {
-        // ... существующий код создания события ...
+        // Get data from request
+        const { title, description, date, points, maxParticipants } = req.body;
 
-        // Логируем создание события
+        // Create event in database
+        const event = await Event.create({
+            title,
+            description,
+            date,
+            points,
+            maxParticipants,
+            createdBy: req.user.id
+        });
+
+        // Log event creation
         await logActivity(
             'event',
             req.user.username,
@@ -21,12 +33,19 @@ const createEvent = async (req, res) => {
     }
 };
 
-// В функции updateEvent добавляем логирование
+// Update event with logging
 const updateEvent = async (req, res) => {
     try {
-        // ... существующий код обновления события ...
+        // Find event by ID
+        const event = await Event.findByPk(req.params.id);
+        if (!event) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
 
-        // Логируем обновление события
+        // Update event data
+        await event.update(req.body);
+
+        // Log event update
         await logActivity(
             'event',
             req.user.username,
@@ -42,12 +61,18 @@ const updateEvent = async (req, res) => {
     }
 };
 
-// В функции deleteEvent добавляем логирование
+// Delete event with logging
 const deleteEvent = async (req, res) => {
     try {
-        // ... существующий код удаления события ...
+        // Find and delete event
+        const event = await Event.findByPk(req.params.id);
+        if (!event) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+        
+        await event.destroy();
 
-        // Логируем удаление события
+        // Log event deletion
         await logActivity(
             'event',
             req.user.username,
@@ -61,4 +86,10 @@ const deleteEvent = async (req, res) => {
         console.error('Delete event error:', error);
         res.status(500).json({ error: 'Failed to delete event' });
     }
+};
+
+module.exports = {
+    createEvent,
+    updateEvent,
+    deleteEvent
 }; 
