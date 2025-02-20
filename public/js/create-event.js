@@ -5,13 +5,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const requestorInput = document.getElementById('requestor');
     const dateInput = document.getElementById('eventDate');
 
-    // Инициализация flatpickr для поля даты
+    // Initialize flatpickr for date field
     flatpickr(dateInput, {
         dateFormat: "Y-m-d",
         time_24hr: true
     });
 
-    // Функция создания новой строки распределения
+    // Function to create new distribution entry
     function createDistributionEntry() {
         const entry = document.createElement('div');
         entry.className = 'distribution-entry';
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         distributionList.appendChild(entry);
 
-        // Добавляем обработчик для проверки числового значения
+        // Add handler for numeric value validation
         const xpInput = entry.querySelector('input[type="number"]');
         xpInput.addEventListener('input', function() {
             let value = parseInt(this.value);
@@ -36,9 +36,9 @@ document.addEventListener('DOMContentLoaded', function() {
             this.value = Math.floor(value);
         });
 
-        // Обработчик удаления строки
+        // Handler for entry removal
         entry.querySelector('.remove-distribution').addEventListener('click', function() {
-            // Проверяем, сколько строк распределения осталось
+            // Check remaining distribution entries
             const remainingEntries = document.querySelectorAll('.distribution-entry').length;
             if (remainingEntries <= 1) {
                 alert('You must have at least one distribution entry');
@@ -50,25 +50,25 @@ document.addEventListener('DOMContentLoaded', function() {
         return entry;
     }
 
-    // Создаем первую строку при загрузке страницы
+    // Create first entry on page load
     createDistributionEntry();
 
-    // Загрузка данных пользователя и установка requestor
+    // Load user data and set requestor
     fetch('/api/user')
         .then(response => response.json())
         .then(user => {
-            // Обновляем аватар с проверкой на null
+            // Update avatar with null check
             const avatarUrl = user.avatar 
                 ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
                 : 'https://cdn.discordapp.com/embed/avatars/0.png'; // Fallback avatar
             
             document.getElementById('userAvatar').src = avatarUrl;
             
-            // Устанавливаем имя пользователя с проверкой
+            // Set username with validation
             const displayName = user.global_name || user.username || 'Unknown User';
             document.getElementById('globalName').textContent = displayName;
             
-            // Устанавливаем requestor с проверкой
+            // Set requestor with validation
             if (displayName && displayName !== 'Unknown User') {
                 requestorInput.value = displayName;
             } else {
@@ -78,13 +78,13 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error loading user data:', error);
-            // Устанавливаем fallback значения
+            // Set fallback values
             document.getElementById('userAvatar').src = 'https://cdn.discordapp.com/embed/avatars/0.png';
             document.getElementById('globalName').textContent = 'Unknown User';
             alert('Error: Could not load user data. Please refresh the page or contact support.');
         });
 
-    // Обработка клика по аватарке для показа/скрытия меню
+    // Handle avatar click for menu show/hide
     const userProfile = document.querySelector('.user-profile');
     document.addEventListener('click', (e) => {
         if (userProfile.contains(e.target)) {
@@ -94,17 +94,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Добавление новой строки распределения
+    // Add new distribution entry
     addDistributionBtn.addEventListener('click', createDistributionEntry);
 
-    // Отправка формы
+    // Form submission
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const formData = new FormData(form);
         const requestor = formData.get('requestor');
 
-        // Проверяем requestor перед отправкой
+        // Validate requestor before submission
         if (!requestor || requestor === 'Unknown User' || requestor.length < 2) {
             alert('Error: Invalid requestor. Please refresh the page and try again.');
             return;
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const xpAmounts = formData.getAll('xpAmount[]');
         const nameLists = formData.getAll('nameList[]');
 
-        // Проверяем и фильтруем пустые строки
+        // Check and filter empty lines
         const validDistributions = [];
         for(let i = 0; i < xpAmounts.length; i++) {
             const nameList = nameLists[i].trim();
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Проверяем наличие валидных распределений
+        // Validate distributions
         if (validDistributions.length === 0) {
             alert('Please add at least one valid distribution with amount and usernames');
             return;
