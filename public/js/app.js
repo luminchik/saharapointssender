@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
-    let table; // Declare table variable in the outer scope
+    let table; // Global table variable
 
-    // Функция проверки аутентификации
+    // Check authentication function
     async function checkAuth() {
         try {
             const response = await fetch('/api/user');
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Инициализация приложения
+    // Initialize application
     async function initializeApp() {
         const user = await checkAuth();
         if (!user) return;
@@ -35,10 +35,10 @@ document.addEventListener('DOMContentLoaded', function() {
         table = $('#eventsTable').DataTable({
             serverSide: false,
             processing: true,
-            ordering: true, // Включаем сортировку
-            order: [[0, 'desc']], // Сортировка по ID по убыванию
+            ordering: true,
+            order: [[0, 'desc']], // Sort by ID descending
             columnDefs: [
-                { orderable: false, targets: [1,2,3,4,5,6] } // Отключаем сортировку для всех столбцов кроме ID
+                { orderable: false, targets: [1,2,3,4,5,6] } // Disable sorting for all columns except ID
             ],
             ajax: {
                 url: '/api/events',
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const column = this;
                     const header = $(column.header());
                     
-                    if (index === 1) { // Date column
+                    if (index === 1) { // Date column filter
                         const button = $(
                             `<button class="column-filter-button">
                                 <span>${header.text()}</span>
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         );
                         header.html(button).append(popup);
 
-                        // Добавляем обработчик клика для кнопки фильтра
+                        // Add click handler for filter button
                         button.on('click', function(e) {
                             e.stopPropagation();
                             $('.column-filter-popup').not(popup).removeClass('active');
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             button.toggleClass('active');
                         });
                         
-                        // Обработчик фильтра даты
+                        // Date filter handler
                         popup.find('.apply-filter').on('click', function() {
                             const from = popup.find('[data-type="from"]').val();
                             const to = popup.find('[data-type="to"]').val();
@@ -197,12 +197,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             popup.removeClass('active');
                             button.removeClass('active');
                         });
-                    } else if (index === 3) { // Requestor column: remove popup and add clear filter button
+                    } else if (index === 3) { // Requestor column filter
                         header.html('<span>' + header.text() + '</span> <button class="clear-requestor-filter" style="display:none; margin-left:5px;">Clear</button>');
                     }
                 });
                 
-                // Close popups when clicking outside
+                // Close filter popups when clicking outside
                 $(document).on('click', function(e) {
                     if (!$(e.target).closest('.column-filter-popup, .column-filter-button').length) {
                         $('.column-filter-popup').removeClass('active');
@@ -210,18 +210,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
 
-                // Delegated event handler for clicking on a requestor link
+                // Handle requestor link click
                 $('#eventsTable').on('click', '.requestor-link', function(e) {
                     e.preventDefault();
                     const requestorName = $(this).text();
                     const table = $('#eventsTable').DataTable();
-                    // Use regex for exact match
                     table.column(3).search('^' + requestorName + '$', true, false).draw();
-                    // Show clear filter button in header
                     $(table.column(3).header()).find('.clear-requestor-filter').show();
                 });
 
-                // Delegated event handler for the clear filter button in the requestor column header
+                // Handle clear filter button click
                 $('#eventsTable').on('click', '.clear-requestor-filter', function(e) {
                     e.stopPropagation();
                     const table = $('#eventsTable').DataTable();
@@ -231,11 +229,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Загрузка данных пользователя
+        // Update user interface
         updateUserInterface(user);
     }
 
-    // Функция обновления интерфейса пользователя
+    // Update user interface function
     function updateUserInterface(user) {
         if (!user) return;
         
@@ -246,11 +244,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('userAvatar').src = avatarUrl;
         document.getElementById('globalName').textContent = user.global_name || user.username;
         
-        // Сохраняем данные пользователя в localStorage
+        // Save user data to localStorage
         localStorage.setItem('userData', JSON.stringify(user));
     }
 
-    // Обработчик клика по аватарке
+    // Handle avatar click
     const userProfile = document.querySelector('.user-profile');
     document.addEventListener('click', (e) => {
         if (userProfile.contains(e.target)) {
@@ -260,24 +258,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Запускаем инициализацию приложения
+    // Initialize application
     initializeApp().catch(error => {
         console.error('App initialization failed:', error);
         window.location.href = '/login';
     });
 
-    // Функция для отображения деталей события
+    // Show event details function
     function showEventDetails(eventData) {
         const modal = document.getElementById('viewModal');
         const detailsContainer = modal.querySelector('.event-details');
         
-        // Создаем массив всех имен пользователей из распределений
+        // Create array of all usernames from distributions
         const allUsernames = eventData.distributions
             .map(dist => dist.nameList.split('\n'))
             .flat()
             .filter(name => name.trim());
         
-        // Форматируем распределения
+        // Format distributions
         const distributionsHtml = eventData.distributions.map(dist => `
             <div class="distribution-item">
                 <strong>Amount: ${dist.xpAmount} XP</strong>
@@ -321,7 +319,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
 
-        // Добавляем функционал поиска
+        // Add search functionality
         const searchInput = detailsContainer.querySelector('#usernameSearch');
         const searchResult = detailsContainer.querySelector('.search-result');
         
@@ -339,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 username.toLowerCase().includes(searchTerm)
             );
             
-            // Обновляем результат поиска
+            // Update search result
             if (matches.length > 0) {
                 searchResult.textContent = `Found ${matches.length} match${matches.length === 1 ? '' : 'es'}`;
                 searchResult.className = 'search-result found';
@@ -348,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 searchResult.className = 'search-result not-found';
             }
             
-            // Подсвечиваем найденные совпадения
+            // Highlight found matches
             document.querySelectorAll('.distribution-item pre').forEach(pre => {
                 let html = pre.textContent;
                 matches.forEach(match => {
@@ -362,12 +360,11 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.classList.add('active');
     }
 
-    // Обработчики для модального окна
+    // Modal event handlers
     document.querySelector('.modal-close').addEventListener('click', () => {
         document.getElementById('viewModal').classList.remove('active');
     });
 
-    // Обработчик клика вне модального окна
     document.getElementById('viewModal').addEventListener('click', (e) => {
         if (e.target === e.currentTarget) {
             e.target.classList.remove('active');
