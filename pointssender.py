@@ -919,7 +919,7 @@ async def history_command(interaction: discord.Interaction, user: discord.Member
         await interaction.response.defer(ephemeral=True)
         
         async with aiohttp.ClientSession() as session:
-            # Используем правильный endpoint и заголовки
+            # Use correct endpoint and headers
             base_url = SAHARA_API_URL.rstrip('/')
             url = f"{base_url}/api/bot/events"
             headers = {
@@ -944,26 +944,26 @@ async def history_command(interaction: discord.Interaction, user: discord.Member
 
                 events = data['data']
                 
-                # Фильтруем завершенные события
+                # Filter completed events
                 completed_events = [event for event in events if event['status'] == 'Completed']
                 
-                # Ищем пользователя в списках распределения
+                # Search for user in distribution lists
                 user_events = []
                 total_op = 0
                 
                 for event in completed_events:
                     for dist in event['distributions']:
                         names = [name.strip() for name in dist['nameList'].split('\n')]
-                        # Проверяем все варианты имени пользователя
+                        # Check all user name variants
                         user_name = user.name.strip()
                         user_global_name = user.global_name.strip() if user.global_name else None
                         user_mention = user.mention.strip()
                         user_display_name = user.display_name.strip()
                         
-                        # Создаем список всех возможных имен пользователя
+                        # Create list of all possible user names
                         possible_names = [name for name in [user_name, user_global_name, user_mention, user_display_name] if name]
                         
-                        # Проверяем, есть ли хотя бы одно из имен пользователя в списке
+                        # Check if any of the user names are in the list
                         if any(name in names for name in possible_names):
                             op_amount = dist['xpAmount']
                             total_op += op_amount
@@ -976,13 +976,13 @@ async def history_command(interaction: discord.Interaction, user: discord.Member
                     await interaction.followup.send(f"❌ No OP history found for {user.mention}", ephemeral=True)
                     return
 
-                # Создаем embed с историей
+                # Create embed with history
                 embed = discord.Embed(
                     title=f"📊 OP History for {user.display_name}",
                     color=discord.Color.blue()
                 )
                 
-                # Добавляем аватар пользователя
+                # Add user avatar
                 avatar_url = user.display_avatar.url if user.display_avatar else user.default_avatar.url
                 embed.set_thumbnail(url=avatar_url)
                 
@@ -992,14 +992,14 @@ async def history_command(interaction: discord.Interaction, user: discord.Member
                     inline=False
                 )
 
-                # Добавляем маленький отступ
+                # Add small space
                 embed.add_field(
                     name="⠀",
                     value="⠀",
                     inline=False
                 )
                 
-                # Добавляем последние события (максимум 10)
+                # Add recent events (maximum 10)
                 recent_events = sorted(user_events, key=lambda x: x['op'], reverse=True)[:10]
                 recent_events_text = "\n".join([
                     f"✅ **{event['title']}** ➜ `{event['op']} OP`"
