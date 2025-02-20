@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const requestorInput = document.getElementById('requestor');
     const eventId = window.location.pathname.split('/').pop();
 
-    // Функция создания новой строки распределения
+    // Function to create a new distribution entry
     function createDistributionEntry(xpAmount = '', nameList = '') {
         const entry = document.createElement('div');
         entry.className = 'distribution-entry';
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         distributionList.appendChild(entry);
 
-        // Добавляем обработчик для проверки числового значения
+        // Add handler for numeric value validation
         const xpInput = entry.querySelector('input[type="number"]');
         xpInput.addEventListener('input', function() {
             let value = parseInt(this.value);
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.value = Math.floor(value);
         });
 
-        // Обработчик удаления строки
+        // Handler for entry removal
         entry.querySelector('.remove-distribution').addEventListener('click', function() {
             entry.remove();
         });
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return entry;
     }
 
-    // Загрузка данных события
+    // Load event data
     fetch(`/api/events/${eventId}`)
         .then(response => response.json())
         .then(event => {
@@ -46,17 +46,17 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('eventDate').value = event.eventDate.split('T')[0];
             document.getElementById('eventTitle').value = event.title;
             
-            // Очищаем существующие распределения
+            // Clear existing distributions
             distributionList.innerHTML = '';
             
-            // Загружаем распределения
+            // Load distributions
             if (event.distributions && event.distributions.length > 0) {
                 event.distributions.forEach(dist => {
                     console.log('Distribution:', dist);
                     createDistributionEntry(dist.xpAmount, dist.nameList);
                 });
             } else {
-                // Если нет распределений, создаем пустую строку
+                // If no distributions, create empty entry
                 createDistributionEntry();
             }
         })
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Failed to load event data');
         });
 
-    // Загрузка данных пользователя
+    // Load user data
     fetch('/api/user')
         .then(response => response.json())
         .then(user => {
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
             requestorInput.value = user.global_name || user.username;
         });
 
-    // Обработка клика по аватарке для показа/скрытия меню
+    // Handle avatar click for menu show/hide
     const userProfile = document.querySelector('.user-profile');
     document.addEventListener('click', (e) => {
         if (userProfile.contains(e.target)) {
@@ -86,10 +86,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Добавление новой строки распределения
+    // Add new distribution entry
     addDistributionBtn.addEventListener('click', () => createDistributionEntry());
 
-    // Отправка формы
+    // Form submission
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -98,11 +98,11 @@ document.addEventListener('DOMContentLoaded', function() {
             eventDate: formData.get('eventDate'),
             eventTitle: formData.get('eventTitle'),
             requestor: formData.get('requestor'),
-            region: 'Global', // Добавляем регион, так как он обязателен
+            region: 'Global', // Add region as it's required
             distributions: []
         };
 
-        // Собираем данные о распределениях
+        // Collect distribution data
         const xpAmounts = formData.getAll('xpAmount[]');
         const nameLists = formData.getAll('nameList[]');
 
